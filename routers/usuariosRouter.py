@@ -16,7 +16,6 @@ async def registro_publico(usuario: UsuarioInsert, request: Request) -> Salida:
     usuarioDAO = UsuarioDAO(request.app.db)
     return usuarioDAO.agregarUsuario(usuario)
 
-
 @router.post("/privado", response_model=Salida, summary="Registro para coordinadores (crear tutor o coordinador)")
 async def registro_privado(usuario: UsuarioInsert, request: Request) -> Salida:
     if usuario.tipo not in ["tutor", "coordinador"]:

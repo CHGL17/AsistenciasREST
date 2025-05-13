@@ -1,15 +1,12 @@
 from pymongo import MongoClient
 
-DATABASE_URL = 'mongodb://localhost:27017/'
-DATABASE_NAME = 'AsistenciasRest'
-
 class Conexion:
     def __init__(self):
-        self.cliente = MongoClient(DATABASE_URL)
-        self.db = self.cliente[DATABASE_NAME]
-
-    def cerrar(self):
-        self.cliente.close()
+        self.cliente = MongoClient("mongodb://root:2GMI5DBwFI9PY13nDyyTYmmsRVifameoZ3Vry24LXsXW646OAEwHhrTgB48mRldj@159.54.150.147:27017/?directConnection=true")
+        self.db = self.cliente["AsistenciasFastAPI"]  # Cambia "asistencias" por el nombre real de tu DB
 
     def getDB(self):
         return self.db
+
+    def cerrar(self):
+        self.cliente.close()

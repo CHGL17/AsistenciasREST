@@ -1,29 +1,28 @@
 import uvicorn
 from fastapi import FastAPI
-from pymongo import MongoClient
-
 from dao.database import Conexion
-from routers import actividadesRouter
+from routers import usuariosRouter, actividadesRouter
 
-#Crear una instancia de la clase fastapi
 app = FastAPI()
 
+# Incluir routers
+app.include_router(usuariosRouter.router)
 app.include_router(actividadesRouter.router)
+
 @app.get("/")
 async def root():
-    salida = {"mensaje": "Bienvenido a AsistenciasREST"}
-    return salida
+    return {"mensaje": "Bienvenido a AsistenciasREST"}
 
 @app.on_event("startup")
 async def startup():
-    print("Conectando con ")
+    print("Conectando con MongoDB")
     conexion = Conexion()
     app.conexion = conexion
     app.db = conexion.getDB()
 
 @app.on_event("shutdown")
 async def shutdown():
-    print("Cerrando la conexion con ")
+    print("Cerrando la conexión con MongoDB")
     app.conexion.cerrar()
 
 if __name__ == '__main__':

@@ -1,5 +1,10 @@
-from fastapi import APIRouter, Request, HTTPException
-from models.usuariosModel import UsuarioInsert, Salida
+from fastapi import APIRouter, Request
+from models.usuariosModel import (
+    UsuarioAlumnoInsert,
+    UsuarioTutorInsert,
+    UsuarioCoordInsert,
+    Salida
+)
 from dao.usuariosDAO import UsuarioDAO
 
 router = APIRouter(
@@ -9,17 +14,18 @@ router = APIRouter(
 
 
 @router.post("/publico", response_model=Salida, summary="Registro solo para alumnos (sin autenticación)")
-async def registro_publico(usuario: UsuarioInsert, request: Request) -> Salida:
-    if usuario.tipo != "alumno":
-        raise HTTPException(status_code=403, detail="Sólo se permite registrar alumnos en esta ruta.")
-
+async def registro_publico(usuario: UsuarioAlumnoInsert, request: Request) -> Salida:
     usuarioDAO = UsuarioDAO(request.app.db)
     return usuarioDAO.agregarUsuario(usuario)
 
-@router.post("/privado", response_model=Salida, summary="Registro para coordinadores (crear tutor o coordinador)")
-async def registro_privado(usuario: UsuarioInsert, request: Request) -> Salida:
-    if usuario.tipo not in ["tutor", "coordinador"]:
-        raise HTTPException(status_code=403, detail="Esta ruta es sólo para crear tutores o coordinadores.")
 
+@router.post("/privado/tutor", response_model=Salida, summary="Registro exclusivo para tutores")
+async def registro_tutor(usuario: UsuarioTutorInsert, request: Request) -> Salida:
+    usuarioDAO = UsuarioDAO(request.app.db)
+    return usuarioDAO.agregarUsuario(usuario)
+
+
+@router.post("/privado/coordinador", response_model=Salida, summary="Registro exclusivo para coordinadores")
+async def registro_coordinador(usuario: UsuarioCoordInsert, request: Request) -> Salida:
     usuarioDAO = UsuarioDAO(request.app.db)
     return usuarioDAO.agregarUsuario(usuario)

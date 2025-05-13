@@ -1,59 +1,65 @@
-from models.usuariosModel import UsuarioInsert, Salida
+from models.usuariosModel import (
+    UsuarioAlumnoInsert,
+    UsuarioTutorInsert,
+    UsuarioCoordInsert,
+    Salida
+)
 from fastapi.encoders import jsonable_encoder
-from bson import ObjectId
 import bcrypt
+from typing import Union
+
 
 class UsuarioDAO:
     def __init__(self, db):
         self.db = db
 
-    def agregarUsuario(self, usuario: UsuarioInsert) -> Salida:
+    def agregarUsuario(
+        self,
+        usuario: Union[UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert]
+    ) -> Salida:
         salida = Salida(estatus="", mensaje="")
         try:
-            # Validar email único
-            existe = self.db.usuarios.find_one({"email": usuario.email})
-            if existe:
-                salida.estatus = "ERROR"
-                salida.mensaje = "El correo ya está registrado."
-                return salida
-
-            # Validar tipo y datos requeridos
-            if usuario.tipo == "alumno":
-                if not usuario.alumno:
-                    salida.estatus = "ERROR"
-                    salida.mensaje = "Datos de alumno requeridos."
-                    return salida
-            elif usuario.tipo == "tutor":
-                if not usuario.tutor:
-                    salida.estatus = "ERROR"
-                    salida.mensaje = "Datos de tutor requeridos."
-                    return salida
-            elif usuario.tipo == "coordinador":
-                if not usuario.coordinador:
-                    salida.estatus = "ERROR"
-                    salida.mensaje = "Datos de coordinador requeridos."
-                    return salida
-            else:
-                salida.estatus = "ERROR"
-                salida.mensaje = "Tipo de usuario no válido."
-                return salida
+            # Verificar que el email no exista ya
+            if self.db.usuarios.find_one({"email": usuario.email}):
+                return Salida(estatus="ERROR", mensaje="El correo ya está registrado.")
 
             # Hashear contraseña
             hashed_password = bcrypt.hashpw(usuario.password.encode('utf-8'), bcrypt.gensalt())
 
-            # Exportar sólo campos que no sean None (limpio)
-            usuario_dict = usuario.dict(exclude_none=True)
-            usuario_dict["password"] = hashed_password.decode('utf-8')
+            # Convertir modelo a dict y asignar la contraseña hasheada
+            usuario_dict = usuario.dict()
+            usuario_dict["password"] = hashed_password.decode("utf-8")
 
-            # Insertar en Mongo
+            # Validaciones específicas por tipo
+            if usuario.tipo == "alumno":
+                # Validar solo tenga clave "alumno"
+                if "alumno" not in usuario_dict or not usuario_dict["alumno"]:
+                    return Salida(estatus="ERROR", mensaje="Datos del alumno requeridos.")
+                if "tutor" in usuario_dict or "coordinador" in usuario_dict:
+                    usuario_dict.pop("tutor", None)
+                    usuario_dict.pop("coordinador", None)
+
+            elif usuario.tipo == "tutor":
+                if "tutor" not in usuario_dict or not usuario_dict["tutor"]:
+                    return Salida(estatus="ERROR", mensaje="Datos del tutor requeridos.")
+                if "alumno" in usuario_dict or "coordinador" in usuario_dict:
+                    usuario_dict.pop("alumno", None)
+                    usuario_dict.pop("coordinador", None)
+
+            elif usuario.tipo == "coordinador":
+                if "coordinador" not in usuario_dict or not usuario_dict["coordinador"]:
+                    return Salida(estatus="ERROR", mensaje="Datos del coordinador requeridos.")
+                if "alumno" in usuario_dict or "tutor" in usuario_dict:
+                    usuario_dict.pop("alumno", None)
+                    usuario_dict.pop("tutor", None)
+
+            else:
+                return Salida(estatus="ERROR", mensaje="Tipo de usuario no válido.")
+
+            # Insertar a MongoDB
             result = self.db.usuarios.insert_one(jsonable_encoder(usuario_dict))
-
-            salida.estatus = "OK"
-            salida.mensaje = "Usuario creado con id: " + str(result.inserted_id)
+            return Salida(estatus="OK", mensaje="Usuario creado con id: " + str(result.inserted_id))
 
         except Exception as ex:
-            print(f"Error al crear usuario: {ex}")
-            salida.estatus = "ERROR"
-            salida.mensaje = "Error interno al agregar usuario."
-
-        return salida
+            print(f"Error interno al registrar usuario: {ex}")
+            return Salida(estatus="ERROR", mensaje="Error interno al agregar usuario.")

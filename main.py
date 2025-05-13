@@ -25,5 +25,6 @@ async def shutdown():
     print("Cerrando la conexión con MongoDB")
     app.conexion.cerrar()
 
+#python -m main uvicorn main:app --reload
 if __name__ == '__main__':
     uvicorn.run("main:app", host='127.0.0.1', reload=True)

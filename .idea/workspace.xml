@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5cd5ee04-ee2c-428b-84b9-0723dabce3b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/AsistenciasREST.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AsistenciasREST.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dao/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/dao/database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/usuarios.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/routers/actividadesRouter.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/actividadesRouter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routers/usuarios.py" beforeDir="false" />
-    </list>
+    <list default="true" id="5cd5ee04-ee2c-428b-84b9-0723dabce3b6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

@@ -1,6 +1,6 @@
-#Importación de librerías, modelos, etc...
+# Importación de librerías, modelos, etc...
 from pydantic import BaseModel, EmailStr, Field
-from typing import Literal
+from typing import Literal, Union
 from datetime import datetime
 
 
@@ -14,6 +14,7 @@ class TutorModel(BaseModel):
     noDocente: str
     horasTutoria: int
     carrera: int
+    nombreCarrera: str | None = None  # Añadimos campo adicional para el nombre (Consulta ID)
 
 
 class CoordinadorModel(BaseModel):
@@ -21,7 +22,8 @@ class CoordinadorModel(BaseModel):
     departamento: str
     carrera: int
 
-#Modelo para la entrada del Alumno
+
+# Modelo para la entrada del Alumno
 class UsuarioAlumnoInsert(BaseModel):
     email: EmailStr
     nombre: str
@@ -31,7 +33,8 @@ class UsuarioAlumnoInsert(BaseModel):
     alumno: AlumnoModel
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
-#Modelo para la entrada del Tutor
+
+# Modelo para la entrada del Tutor
 class UsuarioTutorInsert(BaseModel):
     email: EmailStr
     nombre: str
@@ -41,7 +44,8 @@ class UsuarioTutorInsert(BaseModel):
     tutor: TutorModel
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
-#Modelo para la entrada del Coordinador
+
+# Modelo para la entrada del Coordinador
 class UsuarioCoordInsert(BaseModel):
     email: EmailStr
     nombre: str
@@ -51,8 +55,36 @@ class UsuarioCoordInsert(BaseModel):
     coordinador: CoordinadorModel
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
-#Retorna los datos validados en la salida
+
+# Retorna los datos validados en la salida
 class Salida(BaseModel):
     estatus: str
     mensaje: str
     id_usuario: str | None = None
+
+
+# Modelo de entrada para la consulta Individual de usuarios
+class UsuarioBaseResponse(BaseModel):
+    id: str
+    email: EmailStr
+    nombre: str
+    apellidos: str
+    tipo: str
+    fechaRegistro: datetime
+
+
+class AlumnoResponse(UsuarioBaseResponse):
+    alumno: AlumnoModel
+    nombreCarrera: str | None = None  # Añadimos campo adicional para el nombre
+
+class TutorResponse(UsuarioBaseResponse):
+    tutor: TutorModel
+    nombreCarrera: str | None = None
+
+class CoordinadorResponse(UsuarioBaseResponse):
+    coordinador: CoordinadorModel
+    nombreCarrera: str | None = None
+
+class UsuarioSalidaID(Salida):
+    usuario: Union[AlumnoResponse, TutorResponse, CoordinadorResponse, None] = None
+

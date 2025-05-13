@@ -1,10 +1,14 @@
-from models.usuariosModel import UsuarioAlumnoInsert,UsuarioTutorInsert,UsuarioCoordInsert,Salida
+from models.usuariosModel import (UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida, AlumnoModel,
+                                  TutorModel, CoordinadorModel, AlumnoResponse, TutorResponse, CoordinadorResponse,
+                                  UsuarioSalidaID,
+                                  )
 from fastapi.encoders import jsonable_encoder
 import bcrypt
 import re
 from datetime import datetime
 from typing import Union
 from pymongo import MongoClient
+from bson import ObjectId
 
 
 class UsuarioDAO:
@@ -12,7 +16,8 @@ class UsuarioDAO:
         self.db = db
         self.usuarios = db.usuarios
         self.carreras = db.carreras
-#Valicación de campos y parámetros generales
+
+    # Valicación de campos y parámetros generales
     def _validar_carrera(self, carrera_id: int) -> bool:
         return self.carreras.find_one({"_id": carrera_id}) is not None
 
@@ -160,3 +165,86 @@ class UsuarioDAO:
                 estatus="ERROR",
                 mensaje="Ocurrió un error interno al procesar el registro"
             )
+
+    # Componente DAO para la consulta individual (ID) de usuarios
+
+    def consultarUsuarioPorID(self, id_usuario: str) -> UsuarioSalidaID:
+        try:
+            # Validación del ID
+            if not ObjectId.is_valid(id_usuario):
+                return UsuarioSalidaID(
+                    estatus="ERROR",
+                    mensaje="ID de usuario no válido",
+                    id_usuario=id_usuario
+                )
+
+            # Consulta a la vista optimizada
+            usuario_data = self.db.viewUsuariosID.find_one({
+                "$or": [
+                    {"id": id_usuario},
+                    {"_id": ObjectId(id_usuario)}
+                ]
+            })
+
+            if not usuario_data:
+                return UsuarioSalidaID(
+                    estatus="ERROR",
+                    mensaje=f"Usuario con ID {id_usuario} no encontrado",
+                    id_usuario=id_usuario
+                )
+
+            # Construcción de la respuesta
+            response_data = {
+                "id": usuario_data["id"],
+                "email": usuario_data["email"],
+                "nombre": usuario_data["nombre"],
+                "apellidos": usuario_data["apellidos"],
+                "tipo": usuario_data["tipo"],
+                "fechaRegistro": usuario_data["fechaRegistro"],
+                "nombreCarrera": usuario_data.get("nombreCarrera")
+            }
+
+            # Manejo por tipo de usuario
+            if usuario_data["tipo"] == "alumno":
+                response_data["alumno"] = {
+                    "noControl": usuario_data["alumno"]["noControl"],
+                    "semestre": usuario_data["alumno"]["semestre"],
+                    "carrera": usuario_data["alumno"]["carrera"]  # ID numérico
+                }
+                usuario_resp = AlumnoResponse(**response_data)
+            elif usuario_data["tipo"] == "tutor":
+                response_data["tutor"] = {
+                    "noDocente": usuario_data["tutor"]["noDocente"],
+                    "horasTutoria": usuario_data["tutor"]["horasTutoria"],
+                    "carrera": usuario_data["tutor"]["carrera"]  # ID numérico
+                }
+                usuario_resp = TutorResponse(**response_data)
+            elif usuario_data["tipo"] == "coordinador":
+                response_data["coordinador"] = {
+                    "noEmpleado": usuario_data["coordinador"]["noEmpleado"],
+                    "departamento": usuario_data["coordinador"]["departamento"],
+                    "carrera": usuario_data["coordinador"]["carrera"]  # ID numérico
+                }
+                usuario_resp = CoordinadorResponse(**response_data)
+            else:
+                return UsuarioSalidaID(
+                    estatus="ERROR",
+                    mensaje="Tipo de usuario no reconocido",
+                    id_usuario=id_usuario
+                )
+
+            return UsuarioSalidaID(
+                estatus="OK",
+                mensaje="Usuario encontrado exitosamente",
+                id_usuario=usuario_data["id"],
+                usuario=usuario_resp
+            )
+
+        except Exception as e:
+            print(f"Error al consultar usuario {id_usuario}: {str(e)}")
+            return UsuarioSalidaID(
+                estatus="ERROR",
+                mensaje="Error interno al consultar el usuario",
+                id_usuario=id_usuario
+            )
+    # Componente DAO para la consulta general (ID) de usuarios

@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5cd5ee04-ee2c-428b-84b9-0723dabce3b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/AsistenciasREST.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AsistenciasREST.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dao/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/dao/database.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dao/usuariosDAO.py" beforeDir="false" afterPath="$PROJECT_DIR$/dao/usuariosDAO.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/usuariosModel.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/usuariosModel.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routers/usuariosRouter.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/usuariosRouter.py" afterDir="false" />
@@ -54,7 +53,7 @@
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;usuarios&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/ramir/OneDrive/Documentos/GitHub_Inst/AsistenciasREST&quot;,
@@ -100,8 +99,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PY-251.25410.122" />
-        <option value="bundled-python-sdk-880ecab49056-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.25410.122" />
+        <option value="bundled-python-sdk-2ee2454479a3-9cdd278e9d02-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.25410.122" />
       </set>
     </attachedChunks>
   </component>

@@ -1,60 +1,58 @@
+#Importación de librerías, modelos, etc...
 from pydantic import BaseModel, EmailStr, Field
 from typing import Literal
 from datetime import datetime
 
 
 class AlumnoModel(BaseModel):
-    noControl: str = Field(..., min_length=8, max_length=8)
-    semestre: int = Field(..., ge=1, le=12)
+    noControl: str
+    semestre: int
     carrera: int
 
 
 class TutorModel(BaseModel):
     noDocente: str
-    horasTutoria: int = Field(..., ge=1)
+    horasTutoria: int
     carrera: int
 
 
 class CoordinadorModel(BaseModel):
     noEmpleado: str
     departamento: str
-    carrera:int
+    carrera: int
 
-
-# Modelo para ALUMNO
+#Modelo para la entrada del Alumno
 class UsuarioAlumnoInsert(BaseModel):
     email: EmailStr
     nombre: str
     apellidos: str
     tipo: Literal["alumno"]
-    password: str = Field(..., min_length=8)
+    password: str
     alumno: AlumnoModel
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
-
-# Modelo para TUTOR
+#Modelo para la entrada del Tutor
 class UsuarioTutorInsert(BaseModel):
     email: EmailStr
     nombre: str
     apellidos: str
     tipo: Literal["tutor"]
-    password: str = Field(..., min_length=8)
+    password: str
     tutor: TutorModel
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
-
-# Modelo para COORDINADOR
+#Modelo para la entrada del Coordinador
 class UsuarioCoordInsert(BaseModel):
     email: EmailStr
     nombre: str
     apellidos: str
     tipo: Literal["coordinador"]
-    password: str = Field(..., min_length=8)
+    password: str
     coordinador: CoordinadorModel
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
-
-# Salida común
+#Retorna los datos validados en la salida
 class Salida(BaseModel):
     estatus: str
     mensaje: str
+    id_usuario: str | None = None

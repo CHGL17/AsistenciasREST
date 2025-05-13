@@ -5,10 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5cd5ee04-ee2c-428b-84b9-0723dabce3b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/AsistenciasREST.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AsistenciasREST.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routers/usuariosRouter.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/usuariosRouter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dao/actividadesDAO.py" beforeDir="false" afterPath="$PROJECT_DIR$/dao/actividadesDAO.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/actividadesModel.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/actividadesModel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routers/actividadesRouter.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/actividadesRouter.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,7 +113,7 @@
       <workItem from="1747020014747" duration="2896000" />
       <workItem from="1747100363840" duration="214000" />
       <workItem from="1747101273111" duration="326000" />
-      <workItem from="1747101618350" duration="384000" />
+      <workItem from="1747101618350" duration="8731000" />
     </task>
     <servers />
   </component>
@@ -121,6 +121,6 @@
     <option name="version" value="3" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/AsistenciasREST$main.coverage" NAME="main Coverage Results" MODIFIED="1747101994821" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/AsistenciasREST$main.coverage" NAME="main Coverage Results" MODIFIED="1747110268317" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

@@ -5,7 +5,7 @@ from datetime import datetime
 class ActividadInsert(BaseModel):
     nombre: str
     descripcion: str
-    estatus: str | None = "Por realizar"
+    estatus: Literal["Por realizar", "Cancelada", "Realizada"]
     obligatoria: bool | None = False
 
 class Salida(BaseModel):

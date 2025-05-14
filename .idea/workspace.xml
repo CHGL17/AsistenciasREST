@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="5cd5ee04-ee2c-428b-84b9-0723dabce3b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dao/actividadesDAO.py" beforeDir="false" afterPath="$PROJECT_DIR$/dao/actividadesDAO.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/actividadesModel.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/actividadesModel.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routers/actividadesRouter.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/actividadesRouter.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -115,6 +113,7 @@
       <workItem from="1747147264300" duration="973000" />
       <workItem from="1747158839218" duration="880000" />
       <workItem from="1747185888416" duration="8855000" />
+      <workItem from="1747205137592" duration="2485000" />
     </task>
     <servers />
   </component>
@@ -152,6 +151,6 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/AsistenciasREST$main.coverage" NAME="main Coverage Results" MODIFIED="1747194668047" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/AsistenciasREST$main.coverage" NAME="main Coverage Results" MODIFIED="1747205931868" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

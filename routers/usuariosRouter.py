@@ -1,7 +1,8 @@
 # Importación de librerías, modelos, dao, etc.
 from fastapi import APIRouter, Request, HTTPException, status, Depends
 from models.usuariosModel import UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida, UsuarioSalidaID, \
-    AlumnoResponse, TutorResponse, CoordinadorResponse, UsuarioSalidaLista
+    UsuarioSalidaLista, \
+    EliminarUsuarioRequest, UsuarioEliminadoResponse
 from dao.usuariosDAO import UsuarioDAO
 from typing import Annotated
 
@@ -90,3 +91,58 @@ def consulta_general_usuarios(
         usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
 ):
     return usuario_dao.consultaGeneralUsuarios()
+
+
+# Definición de la ruta y parámetros para la elimnación de usuarios
+
+from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.responses import JSONResponse
+from typing import Annotated
+from datetime import datetime
+
+@router.delete(
+    "/{id_usuario}",
+    response_model=UsuarioEliminadoResponse,
+    summary="Eliminar un usuario permanentemente",
+    responses={
+        200: {"description": "Usuario eliminado con éxito"},
+        400: {"description": "ID inválido"},
+        403: {"description": "No autorizado"},
+        404: {"description": "Usuario no encontrado"},
+        409: {"description": "El usuario tiene dependencias"},
+        500: {"description": "Error interno del servidor"}
+    }
+)
+def eliminar_usuario(
+    id_usuario: str,
+    datos_autorizacion: EliminarUsuarioRequest,
+    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
+):
+    resultado = usuario_dao.eliminar_usuario(
+        id_usuario=id_usuario,
+        no_empleado_coordinador=datos_autorizacion.no_empleado_coordinador
+    )
+
+    if resultado["estatus"] == "ERROR":
+        # Incluir detalles del usuario en errores 409
+        if resultado.get("usuario"):
+            raise HTTPException(
+                status_code=resultado["status_code"],
+                detail={
+                    "mensaje": resultado["mensaje"],
+                    "usuario": resultado["usuario"]
+                }
+            )
+        raise HTTPException(
+            status_code=resultado["status_code"],
+            detail=resultado["mensaje"]
+        )
+
+    return UsuarioEliminadoResponse(
+        mensaje=resultado["mensaje"],
+        detalles_eliminacion={
+            "usuario": resultado["usuario_eliminado"],
+            "operacion": "eliminacion_permanente"
+        },
+        coordinador_autorizador=resultado["no_empleado_coordinador"]
+    )

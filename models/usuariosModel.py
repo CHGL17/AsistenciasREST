@@ -91,3 +91,19 @@ class UsuarioSalidaID(Salida):
 
 class UsuarioSalidaLista(Salida):
     usuarios: list[Union[AlumnoResponse, TutorResponse, CoordinadorResponse]] = []
+
+# Modelo de entrada para la eliminación de usuarios
+class EliminarUsuarioRequest(BaseModel):
+    no_empleado_coordinador: str = Field(
+        ...,
+        description="Número de empleado del coordinador que autoriza la eliminación",
+        example="CO123456",
+        min_length=3,
+        max_length=20
+    )
+
+class UsuarioEliminadoResponse(BaseModel):
+    mensaje: str
+    detalles_eliminacion: dict
+    coordinador_autorizador: str
+    fecha_eliminacion: datetime = Field(default_factory=datetime.now)

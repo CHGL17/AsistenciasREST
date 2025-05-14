@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 import bcrypt
 import re
 from datetime import datetime
-from typing import Union
+from typing import Union, Dict, Any
 from pymongo import MongoClient
 from bson import ObjectId
 
@@ -288,3 +288,94 @@ class UsuarioDAO:
             salida.mensaje = "Error al obtener el listado de usuarios"
 
         return salida
+
+    # Componente para la eliminación de usuarios
+
+    def eliminar_usuario(self, id_usuario: str, no_empleado_coordinador: str) -> Dict[str, Any]:
+        try:
+            # 1. Validar ID de usuario
+            if not ObjectId.is_valid(id_usuario):
+                return {
+                    "estatus": "ERROR",
+                    "mensaje": "ID de usuario no válido",
+                    "status_code": 400
+                }
+
+            # 2. Validar coordinador
+            coordinador = self.usuarios.find_one({
+                "coordinador.noEmpleado": no_empleado_coordinador,
+                "tipo": "coordinador"
+            })
+
+            if not coordinador:
+                return {
+                    "estatus": "ERROR",
+                    "mensaje": "Acceso denegado: Solo coordinadores pueden eliminar usuarios",
+                    "status_code": 403
+                }
+
+            # 3. Obtener usuario completo antes de eliminar
+            usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario)})
+            if not usuario:
+                return {
+                    "estatus": "ERROR",
+                    "mensaje": "Usuario no encontrado",
+                    "status_code": 404
+                }
+
+            # 4. Verificar dependencias
+            if self.tiene_dependencias(id_usuario):
+                return {
+                    "estatus": "ERROR",
+                    "mensaje": "El usuario tiene registros asociados y no puede ser eliminado",
+                    "status_code": 409,
+                    "usuario": self.formatear_usuario(usuario)  # Incluir datos aunque haya error
+                }
+
+            # 5. Eliminar y preparar respuesta
+            self.usuarios.delete_one({"_id": ObjectId(id_usuario)})
+
+            return {
+                "estatus": "OK",
+                "mensaje": "Usuario eliminado exitosamente",
+                "status_code": 200,
+                "usuario_eliminado": self.formatear_usuario(usuario),
+                "no_empleado_coordinador": no_empleado_coordinador
+            }
+
+        except Exception as ex:
+            print(f"Error al eliminar usuario: {ex}")
+            return {
+                "estatus": "ERROR",
+                "mensaje": "Error interno del servidor",
+                "status_code": 500
+            }
+
+    def tiene_dependencias(self, id_usuario: str) -> bool:
+        """Verifica si el usuario tiene registros asociados"""
+        return self.db.asistencias.count_documents({
+            "$or": [
+                {"id_alumno": ObjectId(id_usuario)},
+                {"id_tutor": ObjectId(id_usuario)}
+            ]
+        }) > 0
+
+    def formatear_usuario(self, usuario: Dict) -> Dict:
+        """Formatea el documento de usuario para la respuesta"""
+        usuario_formateado = {
+            "id": str(usuario["_id"]),
+            "email": usuario["email"],
+            "nombre": usuario["nombre"],
+            "apellidos": usuario["apellidos"],
+            "tipo": usuario["tipo"],
+            "fechaRegistro": usuario["fechaRegistro"]
+        }
+
+        if usuario["tipo"] == "alumno":
+            usuario_formateado["alumno"] = usuario["alumno"]
+        elif usuario["tipo"] == "tutor":
+            usuario_formateado["tutor"] = usuario["tutor"]
+        elif usuario["tipo"] == "coordinador":
+            usuario_formateado["coordinador"] = usuario["coordinador"]
+
+        return usuario_formateado

@@ -1,6 +1,6 @@
 # Importación de librerías, modelos, etc...
-from pydantic import BaseModel, EmailStr, Field
-from typing import Literal, Union
+from pydantic import BaseModel, EmailStr, Field, validator
+from typing import Literal, Union, Optional, Dict
 from datetime import datetime
 
 
@@ -76,21 +76,84 @@ class AlumnoResponse(UsuarioBaseResponse):
     alumno: AlumnoModel
     nombreCarrera: str | None = None  # Añadimos campo adicional para el nombre
 
+
 class TutorResponse(UsuarioBaseResponse):
     tutor: TutorModel
     nombreCarrera: str | None = None
+
 
 class CoordinadorResponse(UsuarioBaseResponse):
     coordinador: CoordinadorModel
     nombreCarrera: str | None = None
 
+
 class UsuarioSalidaID(Salida):
     usuario: Union[AlumnoResponse, TutorResponse, CoordinadorResponse, None] = None
+
 
 # Modelo de entrada para la consulta General de usuarios
 
 class UsuarioSalidaLista(Salida):
     usuarios: list[Union[AlumnoResponse, TutorResponse, CoordinadorResponse]] = []
+
+
+# Modelo de entrada para la Modificación del usuario
+class ActualizarAlumnoRequest(BaseModel):
+    nombre: str | None = Field(None, min_length=2, max_length=50, example="Juan")
+    apellidos: str | None = Field(None, min_length=2, max_length=50, example="Pérez")
+    email: EmailStr | None = Field(None, example="alumno@example.com")
+    password: str | None = Field(None, min_length=8, example="NuevaContraseña123")
+    alumno: AlumnoModel | None = Field(
+        None,
+        example={
+            "noControl": "20230001",
+            "semestre": 5,
+            "carrera": 1
+        }
+    )
+
+
+class ActualizarTutorRequest(BaseModel):
+    nombre: str | None = Field(None, min_length=2, max_length=50, example="María")
+    apellidos: str | None = Field(None, min_length=2, max_length=50, example="Gómez")
+    email: EmailStr | None = Field(None, example="tutor@example.com")
+    password: str | None = Field(None, min_length=8, example="NuevaContraseña123")
+    tutor: TutorModel | None = Field(
+        None,
+        example={
+            "noDocente": "T12345",
+            "horasTutoria": 10,
+            "carrera": 1,
+            "nombreCarrera": "Ingeniería en Sistemas"
+        }
+    )
+
+
+class ActualizarCoordinadorRequest(BaseModel):
+    nombre: str | None = Field(None, min_length=2, max_length=50, example="Carlos")
+    apellidos: str | None = Field(None, min_length=2, max_length=50, example="López")
+    email: EmailStr | None = Field(None, example="coordinador@example.com")
+    password: str | None = Field(None, min_length=8, example="NuevaContraseña123")
+    coordinador: CoordinadorModel | None = Field(
+        None,
+        example={
+            "noEmpleado": "CO12345",
+            "departamento": "Tutorías",
+            "carrera": 1,
+            "nombreCarrera": "Ingeniería en Sistemas"
+        }
+    )
+
+class UsuarioActualizadoResponse(BaseModel):
+    id: str
+    email: EmailStr
+    nombre: str
+    apellidos: str
+    tipo: Literal["alumno", "tutor", "coordinador"]
+    fechaRegistro: datetime
+    alumno: Optional[Dict] = None
+    tutor: Optional[Dict] = None
+    coordinador: Optional[Dict] = None
 
 # Modelo de entrada para la eliminación de usuarios
 class EliminarUsuarioRequest(BaseModel):
@@ -101,6 +164,7 @@ class EliminarUsuarioRequest(BaseModel):
         min_length=3,
         max_length=20
     )
+
 
 class UsuarioEliminadoResponse(BaseModel):
     mensaje: str

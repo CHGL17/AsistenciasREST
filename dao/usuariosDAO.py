@@ -178,7 +178,7 @@ class UsuarioDAO:
                     id_usuario=id_usuario
                 )
 
-            # Consulta a la vista optimizada
+            # Consulta a la vista
             usuario_data = self.db.viewUsuariosID.find_one({
                 "$or": [
                     {"id": id_usuario},
@@ -289,6 +289,83 @@ class UsuarioDAO:
 
         return salida
 
+    # Componente para la modificación de usuarios
+    def actualizar_alumno(self, id_usuario: str, datos_actualizacion: dict, usuario_actual: dict) -> dict:
+        usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario), "tipo": "alumno"})
+        if not usuario:
+            return {
+                "estatus": "ERROR",
+                "mensaje": "El usuario no existe o no es un alumno",
+                "status_code": 404
+            }
+
+        return self._actualizar_usuario_generico(id_usuario, datos_actualizacion, usuario_actual, "alumno")
+
+    def actualizar_tutor(self, id_usuario: str, datos_actualizacion: dict, usuario_actual: dict) -> dict:
+        usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario), "tipo": "tutor"})
+        if not usuario:
+            return {
+                "estatus": "ERROR",
+                "mensaje": "El usuario no existe o no es un tutor",
+                "status_code": 404
+            }
+
+        return self._actualizar_usuario_generico(id_usuario, datos_actualizacion, usuario_actual, "tutor")
+
+    def actualizar_coordinador(self, id_usuario: str, datos_actualizacion: dict, usuario_actual: dict) -> dict:
+        usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario), "tipo": "coordinador"})
+        if not usuario:
+            return {
+                "estatus": "ERROR",
+                "mensaje": "El usuario no existe o no es un coordinador",
+                "status_code": 404
+            }
+
+        return self._actualizar_usuario_generico(id_usuario, datos_actualizacion, usuario_actual, "coordinador")
+
+    def _actualizar_usuario_generico(
+            self,
+            id_usuario: str,
+            datos_actualizacion: dict,
+            usuario_actual: dict,
+            tipo_usuario: str
+    ) -> dict:
+        try:
+            campos_validos = ["nombre", "apellidos", "email", "password", tipo_usuario]
+            datos_set = {}
+
+            for campo in campos_validos:
+                if campo in datos_actualizacion:
+                    if campo == "password":
+                        hashed_password = bcrypt.hashpw(datos_actualizacion["password"].encode('utf-8'),
+                                                        bcrypt.gensalt())
+                        datos_set["password"] = hashed_password.decode('utf-8')
+                    else:
+                        datos_set[campo] = datos_actualizacion[campo]
+
+            if not datos_set:
+                return {
+                    "estatus": "ERROR",
+                    "mensaje": "No se proporcionaron datos válidos para actualizar",
+                    "status_code": 400
+                }
+
+            self.usuarios.update_one({"_id": ObjectId(id_usuario)}, {"$set": datos_set})
+
+            return {
+                "estatus": "OK",
+                "mensaje": "Usuario actualizado correctamente",
+                "status_code": 200
+            }
+
+        except Exception as ex:
+            print(f"Error al actualizar usuario {id_usuario}: {ex}")
+            return {
+                "estatus": "ERROR",
+                "mensaje": "Error interno al actualizar el usuario",
+                "status_code": 500
+            }
+
     # Componente para la eliminación de usuarios
 
     def eliminar_usuario(self, id_usuario: str, no_empleado_coordinador: str) -> Dict[str, Any]:
@@ -361,7 +438,7 @@ class UsuarioDAO:
         }) > 0
 
     def formatear_usuario(self, usuario: Dict) -> Dict:
-        """Formatea el documento de usuario para la respuesta"""
+        """Aquí se formatea el documento de usuario para la respuesta"""
         usuario_formateado = {
             "id": str(usuario["_id"]),
             "email": usuario["email"],

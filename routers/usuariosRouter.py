@@ -1,12 +1,16 @@
 # Importación de librerías, modelos, dao, etc.
-from fastapi import APIRouter, Request, HTTPException, status, Depends
-from models.usuariosModel import UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida, UsuarioSalidaID, \
-    UsuarioSalidaLista, \
-    EliminarUsuarioRequest, UsuarioEliminadoResponse
+from fastapi import APIRouter, Request, HTTPException, status, Depends, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from models.usuariosModel import (
+    UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida,
+    UsuarioSalidaID, UsuarioSalidaLista, EliminarUsuarioRequest,
+    UsuarioEliminadoResponse, ActualizarTutorRequest,
+    ActualizarCoordinadorRequest, ActualizarAlumnoRequest
+)
 from dao.usuariosDAO import UsuarioDAO
 from typing import Annotated
 
-# Ruta del servicio
+# Configuración básica del router
 router = APIRouter(
     prefix="/usuarios",
     tags=["Usuarios"],
@@ -16,13 +20,21 @@ router = APIRouter(
     }
 )
 
+# Configuración de seguridad
+security = HTTPBearer()
 
+# Función para obtener el DAO
 def get_usuario_dao(request: Request) -> UsuarioDAO:
     return UsuarioDAO(request.app.db)
 
+# Función simulada de autenticación (TEMPORAL - para desarrollo)
+def get_current_user():
+    return {"tipo": "coordinador"}  # Simulado, en producción usar JWT o sesión
 
-# Definición de métodos enrutados en el servicio que usamos para el registro de usuarios
 
+# ============ ENDPOINTS ============ #
+
+# Registro público para alumnos
 @router.post("/publico/alumno", response_model=Salida, status_code=status.HTTP_201_CREATED,
              summary="Registro público para alumnos", response_description="Resultado del registro")
 def registro_publico(usuario: UsuarioAlumnoInsert, usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]):
@@ -35,8 +47,9 @@ def registro_publico(usuario: UsuarioAlumnoInsert, usuario_dao: Annotated[Usuari
     return resultado
 
 
+# Registro para tutores (requiere autenticación)
 @router.post("/privado/tutor", response_model=Salida, status_code=status.HTTP_201_CREATED,
-             summary="Registro para tutores (requiere autenticación)", response_description="Resultado del registro")
+             summary="Registro para tutores", response_description="Resultado del registro")
 def registro_tutor(usuario: UsuarioTutorInsert, usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]):
     resultado = usuario_dao.agregarUsuario(usuario)
     if resultado.estatus == "ERROR":
@@ -47,9 +60,9 @@ def registro_tutor(usuario: UsuarioTutorInsert, usuario_dao: Annotated[UsuarioDA
     return resultado
 
 
+# Registro para coordinadores (requiere autenticación)
 @router.post("/privado/coordinador", response_model=Salida, status_code=status.HTTP_201_CREATED,
-             summary="Registro para coordinadores (requiere autenticación)",
-             response_description="Resultado del registro")
+             summary="Registro para coordinadores", response_description="Resultado del registro")
 def registro_coordinador(usuario: UsuarioCoordInsert, usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]):
     resultado = usuario_dao.agregarUsuario(usuario)
     if resultado.estatus == "ERROR":
@@ -60,14 +73,12 @@ def registro_coordinador(usuario: UsuarioCoordInsert, usuario_dao: Annotated[Usu
     return resultado
 
 
-# Definición de rutas para la consulta por ID de usuarios
-
+# Consultar usuario por ID
 @router.get("/{id_usuario}", response_model=UsuarioSalidaID, summary="Consultar un usuario por su ID",
             responses={
                 404: {"model": UsuarioSalidaID, "description": "Usuario no encontrado"},
                 500: {"model": UsuarioSalidaID, "description": "Error interno del servidor"}
-            }
-            )
+            })
 def consultar_usuario_por_id(
         id_usuario: str,
         usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
@@ -81,25 +92,97 @@ def consultar_usuario_por_id(
     return resultado
 
 
-# Definición de rutas para la consulta general de usuarios
-
-@router.get("/general/",
-            response_model=UsuarioSalidaLista,
-            summary="Consulta general de usuarios",
+# Consulta general de usuarios
+@router.get("/general/", response_model=UsuarioSalidaLista, summary="Consulta general de usuarios",
             response_description="Lista completa de usuarios registrados")
-def consulta_general_usuarios(
-        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
-):
+def consulta_general_usuarios(usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]):
     return usuario_dao.consultaGeneralUsuarios()
 
 
-# Definición de la ruta y parámetros para la elimnación de usuarios
+# Actualizar usuario
 
-from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.responses import JSONResponse
-from typing import Annotated
-from datetime import datetime
+@router.put(
+    "/alumno/{id_usuario}",
+    response_model=Salida,
+    summary="Actualizar información de un alumno",
+    responses={
+        200: {"description": "Alumno actualizado exitosamente"},
+        400: {"description": "Datos inválidos o sin cambios"},
+        403: {"description": "No autorizado"},
+        404: {"description": "Alumno no encontrado"},
+        500: {"description": "Error interno del servidor"}
+    }
+)
+async def actualizar_alumno(
+    id_usuario: str,
+    datos_actualizacion: ActualizarAlumnoRequest,
+    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+    current_user: dict = Depends(get_current_user)
+):
+    datos_dict = datos_actualizacion.model_dump(exclude_unset=True)
+    resultado = usuario_dao.actualizar_alumno(id_usuario, datos_dict, current_user)
 
+    if resultado["estatus"] == "ERROR":
+        raise HTTPException(status_code=resultado["status_code"], detail=resultado["mensaje"])
+
+    return Salida(estatus="OK", mensaje="Alumno actualizado correctamente.")
+
+
+# Actualizar TUTOR
+@router.put(
+    "/tutor/{id_usuario}",
+    response_model=Salida,
+    summary="Actualizar información de un tutor",
+    responses={
+        200: {"description": "Tutor actualizado exitosamente"},
+        400: {"description": "Datos inválidos o sin cambios"},
+        403: {"description": "No autorizado"},
+        404: {"description": "Tutor no encontrado"},
+        500: {"description": "Error interno del servidor"}
+    }
+)
+async def actualizar_tutor(
+    id_usuario: str,
+    datos_actualizacion: ActualizarTutorRequest,
+    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+    current_user: dict = Depends(get_current_user)
+):
+    datos_dict = datos_actualizacion.model_dump(exclude_unset=True)
+    resultado = usuario_dao.actualizar_tutor(id_usuario, datos_dict, current_user)
+
+    if resultado["estatus"] == "ERROR":
+        raise HTTPException(status_code=resultado["status_code"], detail=resultado["mensaje"])
+
+    return Salida(estatus="OK", mensaje="Tutor actualizado correctamente.")
+
+
+# Actualizar COORDINADOR
+@router.put(
+    "/coordinador/{id_usuario}",
+    response_model=Salida,
+    summary="Actualizar información de un coordinador",
+    responses={
+        200: {"description": "Coordinador actualizado exitosamente"},
+        400: {"description": "Datos inválidos o sin cambios"},
+        403: {"description": "No autorizado"},
+        404: {"description": "Coordinador no encontrado"},
+        500: {"description": "Error interno del servidor"}
+    }
+)
+async def actualizar_coordinador(
+    id_usuario: str,
+    datos_actualizacion: ActualizarCoordinadorRequest,
+    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+    current_user: dict = Depends(get_current_user)
+):
+    datos_dict = datos_actualizacion.model_dump(exclude_unset=True)
+    resultado = usuario_dao.actualizar_coordinador(id_usuario, datos_dict, current_user)
+
+    if resultado["estatus"] == "ERROR":
+        raise HTTPException(status_code=resultado["status_code"], detail=resultado["mensaje"])
+
+    return Salida(estatus="OK", mensaje="Coordinador actualizado correctamente.")
+# Eliminar usuario
 @router.delete(
     "/{id_usuario}",
     response_model=UsuarioEliminadoResponse,
@@ -114,9 +197,9 @@ from datetime import datetime
     }
 )
 def eliminar_usuario(
-    id_usuario: str,
-    datos_autorizacion: EliminarUsuarioRequest,
-    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
+        id_usuario: str,
+        datos_autorizacion: EliminarUsuarioRequest,
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
 ):
     resultado = usuario_dao.eliminar_usuario(
         id_usuario=id_usuario,
@@ -124,7 +207,6 @@ def eliminar_usuario(
     )
 
     if resultado["estatus"] == "ERROR":
-        # Incluir detalles del usuario en errores 409
         if resultado.get("usuario"):
             raise HTTPException(
                 status_code=resultado["status_code"],

@@ -1,6 +1,7 @@
 # Importación de librerías, modelos, dao, etc.
 from fastapi import APIRouter, Request, HTTPException, status, Depends
-from models.usuariosModel import UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida, UsuarioSalidaID, AlumnoResponse, TutorResponse, CoordinadorResponse
+from models.usuariosModel import UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida, UsuarioSalidaID, \
+    AlumnoResponse, TutorResponse, CoordinadorResponse, UsuarioSalidaLista
 from dao.usuariosDAO import UsuarioDAO
 from typing import Annotated
 
@@ -60,12 +61,12 @@ def registro_coordinador(usuario: UsuarioCoordInsert, usuario_dao: Annotated[Usu
 
 # Definición de rutas para la consulta por ID de usuarios
 
-@router.get("/{id_usuario}",response_model=UsuarioSalidaID,summary="Consultar un usuario por su ID",
-    responses={
-        404: {"model": UsuarioSalidaID, "description": "Usuario no encontrado"},
-        500: {"model": UsuarioSalidaID, "description": "Error interno del servidor"}
-    }
-)
+@router.get("/{id_usuario}", response_model=UsuarioSalidaID, summary="Consultar un usuario por su ID",
+            responses={
+                404: {"model": UsuarioSalidaID, "description": "Usuario no encontrado"},
+                500: {"model": UsuarioSalidaID, "description": "Error interno del servidor"}
+            }
+            )
 def consultar_usuario_por_id(
         id_usuario: str,
         usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
@@ -77,3 +78,15 @@ def consultar_usuario_por_id(
             detail=resultado.mensaje
         )
     return resultado
+
+
+# Definición de rutas para la consulta general de usuarios
+
+@router.get("/general/",
+            response_model=UsuarioSalidaLista,
+            summary="Consulta general de usuarios",
+            response_description="Lista completa de usuarios registrados")
+def consulta_general_usuarios(
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
+):
+    return usuario_dao.consultaGeneralUsuarios()

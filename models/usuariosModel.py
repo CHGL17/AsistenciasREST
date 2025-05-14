@@ -60,7 +60,6 @@ class UsuarioCoordInsert(BaseModel):
 class Salida(BaseModel):
     estatus: str
     mensaje: str
-    id_usuario: str | None = None
 
 
 # Modelo de entrada para la consulta Individual de usuarios
@@ -88,3 +87,7 @@ class CoordinadorResponse(UsuarioBaseResponse):
 class UsuarioSalidaID(Salida):
     usuario: Union[AlumnoResponse, TutorResponse, CoordinadorResponse, None] = None
 
+# Modelo de entrada para la consulta General de usuarios
+
+class UsuarioSalidaLista(Salida):
+    usuarios: list[Union[AlumnoResponse, TutorResponse, CoordinadorResponse]] = []

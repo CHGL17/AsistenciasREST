@@ -1,6 +1,6 @@
 from models.usuariosModel import (UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida, AlumnoModel,
                                   TutorModel, CoordinadorModel, AlumnoResponse, TutorResponse, CoordinadorResponse,
-                                  UsuarioSalidaID,
+                                  UsuarioSalidaID, UsuarioSalidaLista,
                                   )
 from fastapi.encoders import jsonable_encoder
 import bcrypt
@@ -247,4 +247,44 @@ class UsuarioDAO:
                 mensaje="Error interno al consultar el usuario",
                 id_usuario=id_usuario
             )
-    # Componente DAO para la consulta general (ID) de usuarios
+
+    # Componente DAO para la consulta general de usuarios
+
+    def consultaGeneralUsuarios(self) -> UsuarioSalidaLista:
+        salida = UsuarioSalidaLista(estatus="OK", mensaje="", usuarios=[])
+        try:
+            # Consulta a la vista optimizada
+            cursor = self.db.viewUsuariosGeneral.find()
+
+            usuarios = []
+            for usuario_data in cursor:
+                # Construir respuesta según el tipo de usuario
+                response_data = {
+                    "id": usuario_data["id"],
+                    "email": usuario_data["email"],
+                    "nombre": usuario_data["nombre"],
+                    "apellidos": usuario_data["apellidos"],
+                    "tipo": usuario_data["tipo"],
+                    "fechaRegistro": usuario_data["fechaRegistro"],
+                    "nombreCarrera": usuario_data.get("nombreCarrera", "Sin carrera asignada")
+                }
+
+                if usuario_data["tipo"] == "alumno":
+                    response_data["alumno"] = usuario_data["alumno"]
+                    usuarios.append(AlumnoResponse(**response_data))
+                elif usuario_data["tipo"] == "tutor":
+                    response_data["tutor"] = usuario_data["tutor"]
+                    usuarios.append(TutorResponse(**response_data))
+                elif usuario_data["tipo"] == "coordinador":
+                    response_data["coordinador"] = usuario_data["coordinador"]
+                    usuarios.append(CoordinadorResponse(**response_data))
+
+            salida.mensaje = f"Se encontraron {len(usuarios)} usuarios"
+            salida.usuarios = usuarios
+
+        except Exception as ex:
+            print(f"Error en consulta general: {ex}")
+            salida.estatus = "ERROR"
+            salida.mensaje = "Error al obtener el listado de usuarios"
+
+        return salida

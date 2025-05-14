@@ -10,6 +10,14 @@ class GrupoInsert(BaseModel):
     tutor: str  # ObjectId as string reference to usuarios collection
     alumnos: List[str]  # List of ObjectId as string references to usuarios collection
 
+class GrupoUpdate(BaseModel):
+    nombre: Optional[str] = None
+    semestre: Optional[int] = None
+    ciclo: Optional[str] = None  # ObjectId as string reference to ciclos collection
+    carrera: Optional[int] = None  # ObjectId as string reference to carreras collection
+    tutor: Optional[str] = None  # ObjectId as string reference to usuarios collection
+    alumnos: Optional[List[str]] = None  # List of ObjectId as string references to usuarios collection
+
 class Salida(BaseModel):
     estatus: str
     mensaje: str

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException
-from models.gruposModel import GrupoInsert, Salida, GrupoSalida, GruposSalida
+from models.gruposModel import GrupoInsert, GrupoUpdate, Salida, GrupoSalida, GruposSalida
 from dao.gruposDAO import GrupoDAO
 
 router = APIRouter(
@@ -32,11 +32,11 @@ async def consultarGrupos(request: Request) -> GruposSalida:
 
 @router.get("/semestre/{semestre}", response_model=GruposSalida, summary="Consultar grupos por semestre")
 async def consultarGruposPorSemestre(semestre: int, request: Request) -> GruposSalida:
-    # Validar que el semestre sea válido (1-12)
-    if semestre < 1 or semestre > 12:
+    # Validar que el semestre sea válido (1-9)
+    if semestre < 1 or semestre > 9:
         raise HTTPException(
             status_code=400,
-            detail="El semestre debe estar entre 1 y 12"
+            detail="El semestre debe estar entre 1 y 9"
         )
         
     grupoDAO = GrupoDAO(request.app.db)
@@ -48,7 +48,8 @@ async def consultarGrupoPorID(idGrupo: str, request: Request) -> GrupoSalida:
     return await grupoDAO.consultarPorID(idGrupo)
 
 @router.put("/{idGrupo}", response_model=GrupoSalida, summary="Actualizar un grupo")
-async def actualizarGrupo(idGrupo: str, grupo: GrupoInsert, request: Request) -> GrupoSalida:
+async def actualizarGrupo(idGrupo: str, grupo: GrupoUpdate, request: Request) -> GrupoSalida:
+    print(f"Actualizar grupo {idGrupo} con datos: {grupo}")
     try:
         usuario_actual = request.state.usuario
         if usuario_actual.tipo != "coordinador":

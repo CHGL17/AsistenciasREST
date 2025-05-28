@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Request, HTTPException
-from models.usuariosModel import UsuarioInsert
 from models.actividadesModel import ActividadInsert, Salida, ActividadesSalida, ActividadSelectID, ActividadesSalidaID
 from dao.actividadesDAO import ActividadDAO
 router = APIRouter(

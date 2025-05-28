@@ -13,6 +13,7 @@ class CarreraDAO:
         salida = CarreraSalida(estatus="", mensaje="", carrera=None)
         try:
             carrera_dict = jsonable_encoder(carrera)
+            carrera_dict["_id"] = carrera_dict.pop("id")
             resultado = self.db.carreras.insert_one(carrera_dict)
             if resultado.inserted_id:
                 carrera_creada = self.db.carreras.find_one({"_id": resultado.inserted_id})

@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class CarreraInsert(BaseModel):
+    id: int
     carrera: str
     nombre: str
 

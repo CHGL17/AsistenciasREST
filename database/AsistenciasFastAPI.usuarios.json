@@ -1,0 +1,92 @@
+[{
+  "_id": {
+    "$oid": "6823a125f9304440ce512618"
+  },
+  "email": "alumno@example.com",
+  "nombre": "Juan",
+  "apellidos": "Pérez",
+  "tipo": "alumno",
+  "alumno": {
+    "noControl": "20230001",
+    "semestre": 5,
+    "carrera": 1
+  },
+  "fechaRegistro": {
+    "$date": "2025-05-13T19:41:36.407Z"
+  },
+  "password": "$2b$12$QLIHqU2urVi76.soRyDZ8OH7pUglgCNLj8d6mlXRrIFTRUNe.sxBy"
+},
+{
+  "_id": {
+    "$oid": "6823a1a6f9304440ce512619"
+  },
+  "email": "tutor@example.com",
+  "nombre": "María",
+  "apellidos": "Gómez",
+  "tipo": "tutor",
+  "tutor": {
+    "noDocente": "T12345",
+    "horasTutoria": 10,
+    "carrera": 1,
+    "nombreCarrera": "Ingeniería en Sistemas"
+  },
+  "fechaRegistro": {
+    "$date": "2025-05-13T19:14:41.911Z"
+  },
+  "password": "$2b$12$qF0uxTSuahtZ6scSGNvR2.DVw8.p0kz1EyWU6P8nU0ijh0RZBL7k."
+},
+{
+  "_id": {
+    "$oid": "68368f2cc566028fc6a0186f"
+  },
+  "email": "isc_mramirez2021@accitesz.com",
+  "nombre": "Manuel",
+  "apellidos": "Ramírez Rodríguez",
+  "tipo": "alumno",
+  "alumno": {
+    "noControl": "21010310",
+    "semestre": 8,
+    "carrera": 1
+  },
+  "fechaRegistro": {
+    "$date": "2025-05-28T04:17:30.412Z"
+  },
+  "password": "$2b$12$TOQFPLI.owuRX3WLGuuxf.QUulDC2n5UCSgNhVwL9VXPKtTMisLwe"
+},
+{
+  "_id": {
+    "$oid": "68369005c566028fc6a01870"
+  },
+  "email": "Aron@example.com",
+  "nombre": "Aron",
+  "apellidos": "Rocha",
+  "tipo": "tutor",
+  "tutor": {
+    "noDocente": "S545152125",
+    "horasTutoria": 23,
+    "carrera": 1,
+    "nombreCarrera": "Ing. en Sistemas Computacionales"
+  },
+  "fechaRegistro": {
+    "$date": "2025-05-28T04:21:10.069Z"
+  },
+  "password": "$2b$12$xVI/EjjfQCr977Wh.U76U.fiKkxDYZEvAMIkFzixF3ZlWGKAgNOJW"
+},
+{
+  "_id": {
+    "$oid": "68369086c566028fc6a01871"
+  },
+  "email": "betocoordi@example.com",
+  "nombre": "Alberto",
+  "apellidos": "Diaz Vásquez",
+  "tipo": "coordinador",
+  "coordinador": {
+    "noEmpleado": "SD124578",
+    "departamento": "CCN",
+    "carrera": 1
+  },
+  "fechaRegistro": {
+    "$date": "2025-05-28T04:25:01.181Z"
+  },
+  "password": "$2b$12$yx8UfOOH3VMR9aKku8pSW.Dkzu2Iofpr16dzeov1m8imklw/p8606"
+}]

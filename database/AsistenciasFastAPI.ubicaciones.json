@@ -1,0 +1,35 @@
+[{
+  "_id": "67d5066a5c4a73aca45548a7",
+  "nombre": "Aula 101 Edificio C",
+  "interno": true,
+  "latitud": 25.651523,
+  "longitud": -100.289514
+},
+{
+  "_id": "67d5066a5c4a73aca45548a8",
+  "nombre": "Auditorio de Ingeniería Industrial",
+  "interno": true,
+  "latitud": 25.650543,
+  "longitud": -100.290025
+},
+{
+  "_id": "67d5066a5c4a73aca45548a9",
+  "nombre": "Laboratorio de Computo",
+  "interno": true,
+  "latitud": 25.652012,
+  "longitud": -100.289034
+},
+{
+  "_id": "67d5066a5c4a73aca45548aa",
+  "nombre": "Sala de Juntas Edificio F",
+  "interno": true,
+  "latitud": 25.651056,
+  "longitud": -100.289876
+},
+{
+  "_id": "67d5066a5c4a73aca45548ab",
+  "nombre": "Biblioteca Sala de estudio",
+  "interno": true,
+  "latitud": 25.651845,
+  "longitud": -100.288598
+}]

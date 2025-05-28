@@ -1,0 +1,18 @@
+[{
+  "_id": {
+    "$oid": "6824494b57744fe64f2f6a58"
+  },
+  "nombre": "Consurso de programacion",
+  "descripcion": "Concurso interno de programacion",
+  "estatus": "Cancelada",
+  "obligatoria": true
+},
+{
+  "_id": {
+    "$oid": "6824498c57744fe64f2f6a59"
+  },
+  "nombre": "Platica de residencias",
+  "descripcion": "Platica de residencias en el edificio de industrial",
+  "estatus": "Por realizar",
+  "obligatoria": true
+}]

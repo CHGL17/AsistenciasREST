@@ -6,12 +6,6 @@ router = APIRouter(
     tags=["Actividades"]
 )
 
-#@router.post("/", response_model=Salida, summary="Crear una nueva actividad")
-#async def crearActividad(actividad: ActividadInsert, request: Request) -> Salida:
-#    actividadDAO = ActividadDAO(request.app.db)
-#    usuario_actual = request.state.usuario
-#    return await actividadDAO.agregar(actividad, usuario_actual)
-
 @router.post("/", response_model=Salida, summary="Crear una nueva actividad")
 async def crearActividad(actividad: ActividadInsert, request: Request) -> Salida:
     actividadDAO = ActividadDAO(request.app.db)
@@ -32,7 +26,7 @@ async def actualizarActividad(idActividad: str, actividad: ActividadInsert, requ
     actividadDAO = ActividadDAO(request.app.db)
     return actividadDAO.actualizar(idActividad, actividad)
 
-@router.delete("/{idActividad}", response_model=Salida, summary="Eliminar una actividad")
-async def eliminarActividad(idActividad: str, request: Request) -> Salida:
+@router.delete("/{idActividad}", response_model=Salida, summary="Cancelar una actividad")
+async def cancelarActividad(idActividad: str, request: Request) -> Salida:
     actividadDAO = ActividadDAO(request.app.db)
-    return actividadDAO.eliminar(idActividad)
+    return actividadDAO.cancelar(idActividad)

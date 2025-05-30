@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from dao.database import Conexion
-from routers import usuariosRouter, actividadesRouter,ciclosRouters,carrerasRouter
+from routers import usuariosRouter, actividadesRouter,ciclosRouters,carrerasRouter, gruposRouter
 
 app = FastAPI()
 
@@ -10,6 +10,7 @@ app.include_router(usuariosRouter.router)
 app.include_router(actividadesRouter.router)
 app.include_router(ciclosRouters.router)
 app.include_router(carrerasRouter.router)
+app.include_router(gruposRouter.router)
 
 @app.get("/")
 async def root():

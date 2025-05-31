@@ -90,6 +90,26 @@ class UsuarioDAO:
                         mensaje="El número de control ya está registrado"
                     )
 
+                tutor_doc = None
+                if hasattr(usuario, "tutorId") and usuario.tutorId:
+                    try:
+                        tutor_oid = ObjectId(usuario.tutorId)
+                    except Exception:
+                        return Salida(
+                            estatus="ERROR",
+                            mensaje="El ID del tutor no tiene un formato válido"
+                        )
+
+                    tutor_doc = self.usuarios.find_one({
+                        "_id": tutor_oid,
+                        "tipo": "tutor"
+                    })
+                    if not tutor_doc:
+                        return Salida(
+                            estatus="ERROR",
+                            mensaje="El tutor especificado no existe o no es válido"
+                        )
+
             elif isinstance(usuario, UsuarioTutorInsert):
                 if not re.match(r'^[A-Za-z]\d{4,9}$', usuario.tutor.noDocente):
                     return Salida(
@@ -149,6 +169,8 @@ class UsuarioDAO:
             # Preparar documento para MongoDB
             usuario_dict = usuario.model_dump(exclude={"password"})
             usuario_dict["password"] = hashed_password.decode("utf-8")
+            if tutor_doc:
+                usuario_dict["tutorId"] = tutor_doc["_id"]
 
             # Insertar en la base de datos
             result = self.usuarios.insert_one(usuario_dict)
@@ -170,7 +192,6 @@ class UsuarioDAO:
 
     def consultarUsuarioPorID(self, id_usuario: str) -> UsuarioSalidaID:
         try:
-            # Validación del ID
             if not ObjectId.is_valid(id_usuario):
                 return UsuarioSalidaID(
                     estatus="ERROR",
@@ -178,7 +199,6 @@ class UsuarioDAO:
                     id_usuario=id_usuario
                 )
 
-            # Consulta a la vista
             usuario_data = self.db.viewUsuariosID.find_one({
                 "$or": [
                     {"id": id_usuario},
@@ -193,51 +213,11 @@ class UsuarioDAO:
                     id_usuario=id_usuario
                 )
 
-            # Construcción de la respuesta
-            response_data = {
-                "id": usuario_data["id"],
-                "email": usuario_data["email"],
-                "nombre": usuario_data["nombre"],
-                "apellidos": usuario_data["apellidos"],
-                "tipo": usuario_data["tipo"],
-                "fechaRegistro": usuario_data["fechaRegistro"],
-                "nombreCarrera": usuario_data.get("nombreCarrera")
-            }
-
-            # Manejo por tipo de usuario
-            if usuario_data["tipo"] == "alumno":
-                response_data["alumno"] = {
-                    "noControl": usuario_data["alumno"]["noControl"],
-                    "semestre": usuario_data["alumno"]["semestre"],
-                    "carrera": usuario_data["alumno"]["carrera"]  # ID numérico
-                }
-                usuario_resp = AlumnoResponse(**response_data)
-            elif usuario_data["tipo"] == "tutor":
-                response_data["tutor"] = {
-                    "noDocente": usuario_data["tutor"]["noDocente"],
-                    "horasTutoria": usuario_data["tutor"]["horasTutoria"],
-                    "carrera": usuario_data["tutor"]["carrera"]  # ID numérico
-                }
-                usuario_resp = TutorResponse(**response_data)
-            elif usuario_data["tipo"] == "coordinador":
-                response_data["coordinador"] = {
-                    "noEmpleado": usuario_data["coordinador"]["noEmpleado"],
-                    "departamento": usuario_data["coordinador"]["departamento"],
-                    "carrera": usuario_data["coordinador"]["carrera"]  # ID numérico
-                }
-                usuario_resp = CoordinadorResponse(**response_data)
-            else:
-                return UsuarioSalidaID(
-                    estatus="ERROR",
-                    mensaje="Tipo de usuario no reconocido",
-                    id_usuario=id_usuario
-                )
-
             return UsuarioSalidaID(
                 estatus="OK",
                 mensaje="Usuario encontrado exitosamente",
-                id_usuario=usuario_data["id"],
-                usuario=usuario_resp
+                id_usuario=usuario_data.get("id", str(usuario_data.get("_id"))),
+                usuario=usuario_data  # ← Devolver todo el documento ya enriquecido
             )
 
         except Exception as e:
@@ -253,31 +233,40 @@ class UsuarioDAO:
     def consultaGeneralUsuarios(self) -> UsuarioSalidaLista:
         salida = UsuarioSalidaLista(estatus="OK", mensaje="", usuarios=[])
         try:
-            # Consulta a la vista optimizada
             cursor = self.db.viewUsuariosGeneral.find()
-
             usuarios = []
+
             for usuario_data in cursor:
-                # Construir respuesta según el tipo de usuario
-                response_data = {
+                tipo = usuario_data["tipo"]
+                base_fields = {
                     "id": usuario_data["id"],
                     "email": usuario_data["email"],
                     "nombre": usuario_data["nombre"],
                     "apellidos": usuario_data["apellidos"],
                     "tipo": usuario_data["tipo"],
-                    "fechaRegistro": usuario_data["fechaRegistro"],
-                    "nombreCarrera": usuario_data.get("nombreCarrera", "Sin carrera asignada")
+                    "fechaRegistro": usuario_data["fechaRegistro"]
                 }
 
-                if usuario_data["tipo"] == "alumno":
-                    response_data["alumno"] = usuario_data["alumno"]
-                    usuarios.append(AlumnoResponse(**response_data))
-                elif usuario_data["tipo"] == "tutor":
-                    response_data["tutor"] = usuario_data["tutor"]
-                    usuarios.append(TutorResponse(**response_data))
-                elif usuario_data["tipo"] == "coordinador":
-                    response_data["coordinador"] = usuario_data["coordinador"]
-                    usuarios.append(CoordinadorResponse(**response_data))
+                if tipo == "alumno":
+                    usuario_resp = AlumnoResponse(**{
+                        **base_fields,
+                        "alumno": usuario_data["alumno"]
+                    })
+                    usuarios.append(usuario_resp)
+
+                elif tipo == "tutor":
+                    usuario_resp = TutorResponse(**{
+                        **base_fields,
+                        "tutor": usuario_data["tutor"]
+                    })
+                    usuarios.append(usuario_resp)
+
+                elif tipo == "coordinador":
+                    usuario_resp = CoordinadorResponse(**{
+                        **base_fields,
+                        "coordinador": usuario_data["coordinador"]
+                    })
+                    usuarios.append(usuario_resp)
 
             salida.mensaje = f"Se encontraron {len(usuarios)} usuarios"
             salida.usuarios = usuarios

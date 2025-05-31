@@ -4,10 +4,22 @@ from typing import Literal, Union, Optional, Dict
 from datetime import datetime
 
 
+class TutorInlineModel(BaseModel):
+    nombre: str
+    apellidos: str
+    email: str
+    noDocente: str
+    horasTutoria: int
+    carrera: int
+    nombreCarrera: str
+
+
 class AlumnoModel(BaseModel):
     noControl: str
     semestre: int
     carrera: int
+    nombreCarrera: str | None = None
+    tutor: Optional[TutorInlineModel] = None
 
 
 class TutorModel(BaseModel):
@@ -21,6 +33,7 @@ class CoordinadorModel(BaseModel):
     noEmpleado: str
     departamento: str
     carrera: int
+    nombreCarrera: str | None = None
 
 
 # Modelo para la entrada del Alumno
@@ -31,6 +44,7 @@ class UsuarioAlumnoInsert(BaseModel):
     tipo: Literal["alumno"]
     password: str
     alumno: AlumnoModel
+    tutorId: Optional[str] = Field(default=None, description="ID del tutor asignado")
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
 
@@ -74,17 +88,17 @@ class UsuarioBaseResponse(BaseModel):
 
 class AlumnoResponse(UsuarioBaseResponse):
     alumno: AlumnoModel
-    nombreCarrera: str | None = None  # Añadimos campo adicional para el nombre
+
 
 
 class TutorResponse(UsuarioBaseResponse):
     tutor: TutorModel
-    nombreCarrera: str | None = None
+
 
 
 class CoordinadorResponse(UsuarioBaseResponse):
     coordinador: CoordinadorModel
-    nombreCarrera: str | None = None
+
 
 
 class UsuarioSalidaID(Salida):

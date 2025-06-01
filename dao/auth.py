@@ -90,7 +90,7 @@ def validar_acceso_consulta(current_user: dict, tipo_objetivo: str, id_usuario: 
 
     if tipo_actual == "tutor":
         if tipo_objetivo != "alumno":
-            raise HTTPException(status_code=403, detail="Como tutor, sólo tienes la posibilidad de consultarte a ti mismo")
+            raise HTTPException(status_code=403, detail="Como tutor, sólo tienes la posibilidad de consultarte a ti mismo o tus alumnos")
         return
 
     if tipo_actual == "coordinador":

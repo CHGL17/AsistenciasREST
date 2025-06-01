@@ -87,25 +87,20 @@ class GrupoDAO:
         """Consultar todos los grupos"""
         salida = GruposSalida(estatus="", mensaje="", grupos=[])
         try:
-            # grupos_cursor = self.db.grupos.find()
-            grupos_list = self.db.grupos.find()
+            # Usar la vista viewGruposGeneral en lugar de la colección directa
+            grupos_list = self.db.viewGruposGeneral.find()
             
-            if not grupos_list:
-                salida.estatus = "ERROR"
-                salida.mensaje = "No se encontró ningún grupo registrado."
-                return salida
-                
             grupos = []
             for grupo in grupos_list:
                 grupos.append(
                     GrupoSelect(
-                        id=str(grupo["_id"]),
+                        id=grupo["id"],
                         nombre=grupo["nombre"],
                         semestre=grupo["semestre"],
-                        ciclo=str(grupo["ciclo"]),
-                        carrera=int(grupo["carrera"]),
-                        tutor=str(grupo["tutor"]),
-                        alumnos=[str(alumno) for alumno in grupo["alumnos"]]
+                        ciclo=grupo["ciclo"],  # Ahora es un objeto completo
+                        carrera=grupo["carrera"],  # Ahora es un objeto completo
+                        tutor=grupo["tutor"],  # Ahora es un objeto completo
+                        alumnos=grupo["alumnos"]  # Ahora es una lista de objetos completos
                     )
                 )
                 
@@ -119,29 +114,25 @@ class GrupoDAO:
             salida.mensaje = "Error al consultar los grupos, consulte al administrador."
             
         return salida
-        
+
     async def consultarPorSemestre(self, semestre: int) -> GruposSalida:
         """Consultar grupos por semestre"""
         salida = GruposSalida(estatus="", mensaje="", grupos=[])
         try:
-            grupos_list = self.db.grupos.find({"semestre": semestre})
+            # Usar la vista viewGruposGeneral con filtro por semestre
+            grupos_list = self.db.viewGruposGeneral.find({"semestre": semestre})
             
-            if not grupos_list:
-                salida.estatus = "ERROR"
-                salida.mensaje = f"No se encontraron grupos para el semestre {semestre}."
-                return salida
-                
             grupos = []
             for grupo in grupos_list:
                 grupos.append(
                     GrupoSelect(
-                        id=str(grupo["_id"]),
+                        id=grupo["id"],
                         nombre=grupo["nombre"],
                         semestre=grupo["semestre"],
-                        ciclo=str(grupo["ciclo"]),
-                        carrera=int(grupo["carrera"]),
-                        tutor=str(grupo["tutor"]),
-                        alumnos=[str(alumno) for alumno in grupo["alumnos"]]
+                        ciclo=grupo["ciclo"],  # Ahora es un objeto completo
+                        carrera=grupo["carrera"],  # Ahora es un objeto completo
+                        tutor=grupo["tutor"],  # Ahora es un objeto completo
+                        alumnos=grupo["alumnos"]  # Ahora es una lista de objetos completos
                     )
                 )
                 
@@ -155,12 +146,18 @@ class GrupoDAO:
             salida.mensaje = "Error al consultar los grupos, consulte al administrador."
             
         return salida
-        
+
     async def consultarPorID(self, grupo_id: str) -> GrupoSalida:
         """Consultar grupo por ID"""
         salida = GrupoSalida(estatus="", mensaje="", grupo=None)
         try:
-            grupo = self.db.grupos.find_one({"_id": ObjectId(grupo_id)})
+            # Usar la vista viewGruposGeneral para consulta individual
+            grupo = self.db.viewGruposGeneral.find_one({
+                "$or": [
+                    {"id": grupo_id},
+                    {"_id": ObjectId(grupo_id)}
+                ]
+            })
             
             if not grupo:
                 salida.estatus = "ERROR"
@@ -168,13 +165,13 @@ class GrupoDAO:
                 return salida
                 
             grupo_select = GrupoSelect(
-                id=str(grupo["_id"]),
+                id=grupo["id"],
                 nombre=grupo["nombre"],
                 semestre=grupo["semestre"],
-                ciclo=str(grupo["ciclo"]),
-                carrera=int(grupo["carrera"]),
-                tutor=str(grupo["tutor"]),
-                alumnos=[str(alumno) for alumno in grupo["alumnos"]]
+                ciclo=grupo["ciclo"],  # Ahora es un objeto completo
+                carrera=grupo["carrera"],  # Ahora es un objeto completo
+                tutor=grupo["tutor"],  # Ahora es un objeto completo
+                alumnos=grupo["alumnos"]  # Ahora es una lista de objetos completos
             )
             
             salida.estatus = "OK"
@@ -246,15 +243,15 @@ class GrupoDAO:
             
             # Verificar si se realizaron cambios
             if resultado.modified_count > 0:
-                grupo_actualizado = self.db.grupos.find_one({"_id": ObjectId(grupo_id)})
+                grupo_actualizado = self.db.viewGruposGeneral.find_one({"_id": ObjectId(grupo_id)})
                 grupo_select = GrupoSelect(
                     id=str(grupo_actualizado["_id"]),
                     nombre=grupo_actualizado["nombre"],
                     semestre=grupo_actualizado["semestre"],
-                    ciclo=str(grupo_actualizado["ciclo"]),
-                    carrera=int(grupo_actualizado["carrera"]),
-                    tutor=str(grupo_actualizado["tutor"]),
-                    alumnos=[str(alumno) for alumno in grupo_actualizado["alumnos"]]
+                    ciclo=grupo_actualizado["ciclo"],
+                    carrera=grupo_actualizado["carrera"],
+                    tutor=grupo_actualizado["tutor"],
+                    alumnos=[alumno for alumno in grupo_actualizado["alumnos"]]
                 )
                 salida.estatus = "OK"
                 salida.mensaje = "Grupo actualizado correctamente."
@@ -296,3 +293,109 @@ class GrupoDAO:
             salida.mensaje = "Error interno al eliminar el grupo."
         
         return salida
+    
+    async def agregarAlumno(self, grupo_id: str, alumno_id: str) -> GrupoSalida:
+        """Agregar un alumno a un grupo existente"""
+        try:
+            # Validar que el grupo existe
+            if not self.verificar_grupo_existente(grupo_id):
+                return GrupoSalida(
+                    estatus="ERROR",
+                    mensaje=f"Grupo con ID {grupo_id} no encontrado",
+                    grupo=None
+                )
+
+            # Validar que el alumno existe y es de tipo alumno
+            alumno = self.db.usuarios.find_one({"_id": ObjectId(alumno_id), "tipo": "alumno"})
+            if not alumno:
+                return GrupoSalida(
+                    estatus="ERROR",
+                    mensaje="El alumno especificado no existe o no es de tipo alumno",
+                    grupo=None
+                )
+
+            # Verificar si el alumno ya está en el grupo
+            grupo_actual = self.db.grupos.find_one({"_id": ObjectId(grupo_id)})
+            if alumno_id in [str(id) for id in grupo_actual.get("alumnos", [])]:
+                return GrupoSalida(
+                    estatus="ERROR",
+                    mensaje="El alumno ya pertenece a este grupo",
+                    grupo=None
+                )
+
+            # Agregar el alumno al array
+            resultado = self.db.grupos.update_one(
+                {"_id": ObjectId(grupo_id)},
+                {"$addToSet": {"alumnos": ObjectId(alumno_id)}}
+            )
+
+            if resultado.modified_count > 0:
+                # Retornar el grupo actualizado usando consultarPorID
+                return await self.consultarPorID(grupo_id)
+            else:
+                return GrupoSalida(
+                    estatus="ERROR",
+                    mensaje="No se pudo agregar el alumno al grupo",
+                    grupo=None
+                )
+
+        except Exception as ex:
+            print(f"Error al agregar alumno al grupo: {ex}")
+            return GrupoSalida(
+                estatus="ERROR",
+                mensaje="Error interno al agregar el alumno al grupo",
+                grupo=None
+            )
+
+    async def eliminarAlumno(self, grupo_id: str, alumno_id: str) -> GrupoSalida:
+        """Eliminar un alumno de un grupo existente"""
+        try:
+            # Validar que el grupo existe
+            if not self.verificar_grupo_existente(grupo_id):
+                return GrupoSalida(
+                    estatus="ERROR",
+                    mensaje=f"Grupo con ID {grupo_id} no encontrado",
+                    grupo=None
+                )
+
+            # Validar que el alumno existe
+            alumno = self.db.usuarios.find_one({"_id": ObjectId(alumno_id), "tipo": "alumno"})
+            if not alumno:
+                return GrupoSalida(
+                    estatus="ERROR",
+                    mensaje="El alumno especificado no existe o no es de tipo alumno",
+                    grupo=None
+                )
+
+            # Verificar si el alumno está en el grupo
+            grupo_actual = self.db.grupos.find_one({"_id": ObjectId(grupo_id)})
+            if alumno_id not in [str(id) for id in grupo_actual.get("alumnos", [])]:
+                return GrupoSalida(
+                    estatus="ERROR",
+                    mensaje="El alumno no pertenece a este grupo",
+                    grupo=None
+                )
+
+            # Eliminar el alumno del array
+            resultado = self.db.grupos.update_one(
+                {"_id": ObjectId(grupo_id)},
+                {"$pull": {"alumnos": ObjectId(alumno_id)}}
+            )
+
+            if resultado.modified_count > 0:
+                # Retornar el grupo actualizado usando consultarPorID
+                return await self.consultarPorID(grupo_id)
+            else:
+                return GrupoSalida(
+                    estatus="ERROR",
+                    mensaje="No se pudo eliminar el alumno del grupo",
+                    grupo=None
+                )
+
+        except Exception as ex:
+            print(f"Error al eliminar alumno del grupo: {ex}")
+            return GrupoSalida(
+                estatus="ERROR",
+                mensaje="Error interno al eliminar el alumno del grupo",
+                grupo=None
+            )

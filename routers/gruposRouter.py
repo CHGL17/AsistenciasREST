@@ -50,18 +50,18 @@ async def consultarGrupoPorID(idGrupo: str, request: Request) -> GrupoSalida:
 @router.put("/{idGrupo}", response_model=GrupoSalida, summary="Actualizar un grupo")
 async def actualizarGrupo(idGrupo: str, grupo: GrupoUpdate, request: Request) -> GrupoSalida:
     print(f"Actualizar grupo {idGrupo} con datos: {grupo}")
-    try:
-        usuario_actual = request.state.usuario
-        if usuario_actual.tipo != "coordinador":
-            raise HTTPException(
-                status_code=403,
-                detail="Solo los coordinadores pueden actualizar grupos"
-            )
-    except AttributeError:
-        raise HTTPException(
-            status_code=401,
-            detail="Se requiere autenticación para actualizar grupos"
-        )
+    # try:
+    #     usuario_actual = request.state.usuario
+    #     if usuario_actual.tipo != "coordinador":
+    #         raise HTTPException(
+    #             status_code=403,
+    #             detail="Solo los coordinadores pueden actualizar grupos"
+    #         )
+    # except AttributeError:
+    #     raise HTTPException(
+    #         status_code=401,
+    #         detail="Se requiere autenticación para actualizar grupos"
+    #     )
         
     grupoDAO = GrupoDAO(request.app.db)
     return await grupoDAO.actualizar(idGrupo, grupo)
@@ -83,3 +83,39 @@ async def eliminarGrupo(idGrupo: str, request: Request) -> Salida:
         
     grupoDAO = GrupoDAO(request.app.db)
     return await grupoDAO.eliminar(idGrupo)
+
+@router.patch("/{idGrupo}/alumnos/{idAlumno}", response_model=GrupoSalida, summary="Agregar un alumno al grupo")
+async def agregarAlumnoAGrupo(idGrupo: str, idAlumno: str, request: Request) -> GrupoSalida:
+    # try:
+    #     usuario_actual = request.state.usuario
+    #     if usuario_actual.tipo != "coordinador":
+    #         raise HTTPException(
+    #             status_code=403,
+    #             detail="Solo los coordinadores pueden agregar alumnos a grupos"
+    #         )
+    # except AttributeError:
+    #     raise HTTPException(
+    #         status_code=401,
+    #         detail="Se requiere autenticación para agregar alumnos a grupos"
+    #     )
+        
+    grupoDAO = GrupoDAO(request.app.db)
+    return await grupoDAO.agregarAlumno(idGrupo, idAlumno)
+
+@router.delete("/{idGrupo}/alumnos/{idAlumno}", response_model=GrupoSalida, summary="Eliminar un alumno del grupo")
+async def eliminarAlumnoDeGrupo(idGrupo: str, idAlumno: str, request: Request) -> GrupoSalida:
+    # try:
+    #     usuario_actual = request.state.usuario
+    #     if usuario_actual.tipo != "coordinador":
+    #         raise HTTPException(
+    #             status_code=403,
+    #             detail="Solo los coordinadores pueden eliminar alumnos de grupos"
+    #         )
+    # except AttributeError:
+    #     raise HTTPException(
+    #         status_code=401,
+    #         detail="Se requiere autenticación para eliminar alumnos de grupos"
+    #     )
+        
+    grupoDAO = GrupoDAO(request.app.db)
+    return await grupoDAO.eliminarAlumno(idGrupo, idAlumno)

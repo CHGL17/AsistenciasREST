@@ -1,5 +1,27 @@
 from pydantic import BaseModel
 from typing import List, Optional
+
+from .ciclosModel import CicloSelect
+from .carrerasModel import CarreraSelect
+
+class TutorView(BaseModel):
+    id: str
+    nombre: str
+    apellidos: str
+    email: str
+    noDocente: str
+    horasTutoria: int
+    status: str
+
+class AlumnoView(BaseModel):
+    id: str
+    nombre: str
+    apellidos: str
+    email: str
+    noControl: str
+    semestre: int
+    status: str
+
 # from datetime import datetime
         
 class GrupoInsert(BaseModel):
@@ -26,10 +48,10 @@ class GrupoSelect(BaseModel):
     id: str
     nombre: str
     semestre: int
-    ciclo: str
-    carrera: int
-    tutor: str
-    alumnos: List[str]
+    ciclo: CicloSelect
+    carrera: CarreraSelect
+    tutor: TutorView
+    alumnos: List[AlumnoView]
 
 class GruposSalida(Salida):
     grupos: List[GrupoSelect]

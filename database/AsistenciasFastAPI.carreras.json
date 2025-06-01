@@ -1,0 +1,25 @@
+[{
+  "_id": 2,
+  "carrera": "IIA",
+  "nombre": "Ingeniería Industrias Alimentarias"
+},
+{
+  "_id": 4,
+  "carrera": "II",
+  "nombre": "Ingeniería Industrial"
+},
+{
+  "_id": 5,
+  "carrera": "IE",
+  "nombre": "Ingeniería Eléctrica"
+},
+{
+  "_id": 1,
+  "carrera": "ISC",
+  "nombre": "Ingeniería en Sistemas Computacionales"
+},
+{
+  "_id": 3,
+  "carrera": "IIAS",
+  "nombre": "Ingeniería en Innovación Agrícola Sustentable"
+}]

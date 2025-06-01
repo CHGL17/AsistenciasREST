@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+.idea/
 
 # C extensions
 *.so
@@ -103,9 +105,9 @@ celerybeat.pid
 
 # Environments
 .env
-.venv
+#.venv
 env/
-venv/
+#venv/
 ENV/
 env.bak/
 venv.bak/
@@ -164,3 +166,4 @@ lerna-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+*.xml

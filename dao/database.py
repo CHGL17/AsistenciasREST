@@ -2,8 +2,8 @@ from pymongo import MongoClient
 
 class Conexion:
     def __init__(self):
-        self.cliente = MongoClient("mongodb://root:2GMI5DBwFI9PY13nDyyTYmmsRVifameoZ3Vry24LXsXW646OAEwHhrTgB48mRldj@159.54.150.147:27017/?directConnection=true")
-        self.db = self.cliente["AsistenciasFastAPI"]  # Cambia "asistencias" por el nombre real de tu DB
+        self.cliente = MongoClient("mongodb+srv://l21010280:pQKdAFOhBKXhc76x@asistenciasitesz.mmfv6a2.mongodb.net/?retryWrites=true&w=majority&appName=AsistenciasITESZ")
+        self.db = self.cliente["AsistenciasBD"]
 
     def getDB(self):
         return self.db

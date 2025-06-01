@@ -1,0 +1,146 @@
+[{
+  "_id": {
+    "$oid": "683ba77c4ed69e432cbad6eb"
+  },
+  "email": "Aron@example.com",
+  "nombre": "Aron",
+  "apellidos": "Rocha",
+  "tipo": "tutor",
+  "tutor": {
+    "noDocente": "S545152125",
+    "horasTutoria": 23,
+    "carrera": 1,
+    "nombreCarrera": "Ingeniería en Sistemas Computacionales"
+  },
+  "status": "inactivo",
+  "fechaRegistro": {
+    "$date": "2025-06-01T01:04:30.551Z"
+  },
+  "password": "$2b$12$P8zBo8dTbcX8FmU4jKnygOLUrzAyBPHlg1b/OiJ6CUgW8wlRpWJqK"
+},
+{
+  "_id": {
+    "$oid": "683bb12c6e3139d2fd1077a0"
+  },
+  "email": "user@example.com",
+  "nombre": "string",
+  "apellidos": "string",
+  "tipo": "alumno",
+  "alumno": {
+    "noControl": "25202123",
+    "semestre": 1,
+    "carrera": 2,
+    "nombreCarrera": "Ingeniería Industrias Alimentarias",
+    "tutor": {
+      "nombre": "Ana",
+      "apellidos": "Sevilla",
+      "email": "ana@example.com",
+      "noDocente": "S14578963",
+      "horasTutoria": 25,
+      "carrera": 1,
+      "nombreCarrera": "Ingeniería en Sistemas Computacionales",
+      "status": "activo"
+    }
+  },
+  "tutorId": {
+    "$oid": "683bb4243b96d1efda964d5b"
+  },
+  "status": "activo",
+  "fechaRegistro": {
+    "$date": "2025-05-31T22:35:06.658Z"
+  },
+  "password": "$2b$12$Lsl5RfuwxlXyYDt6VDfPle5iMH8L7Pqn0.1HqGqXYIxW6aGIwnLL."
+},
+{
+  "_id": {
+    "$oid": "683bb3f63b96d1efda964d5a"
+  },
+  "email": "chepo@example.com",
+  "nombre": "Gordis",
+  "apellidos": "tics",
+  "tipo": "coordinador",
+  "coordinador": {
+    "noEmpleado": "SD124579",
+    "departamento": "SISTEMAS",
+    "carrera": 1,
+    "nombreCarrera": "Ingeniería en Sistemas Computacionales"
+  },
+  "status": "activo",
+  "fechaRegistro": {
+    "$date": "2025-06-01T01:51:40.030Z"
+  },
+  "password": "$2b$12$b4CANnXbEibISDonEHypHOQzm1YNJhkziHORF7KqLjW8k.X87sT5m"
+},
+{
+  "_id": {
+    "$oid": "683bb4243b96d1efda964d5b"
+  },
+  "email": "ana@example.com",
+  "nombre": "Ana",
+  "apellidos": "Segundo Sevilla",
+  "tipo": "tutor",
+  "tutor": {
+    "noDocente": "S14578963",
+    "horasTutoria": 25,
+    "carrera": 1,
+    "nombreCarrera": "Ingeniería en Sistemas Computacionales"
+  },
+  "status": "activo",
+  "fechaRegistro": {
+    "$date": "2025-05-31T23:28:05.214Z"
+  },
+  "password": "$2b$12$zwNzBebue9S7RO5fPmfmaOQDsi66n4usa4WcT./L4SIPP6UvlEc7q"
+},
+{
+  "_id": {
+    "$oid": "683bb5453b96d1efda964d5c"
+  },
+  "email": "isc_mramirez2021@accitesz.com",
+  "nombre": "Manuel",
+  "apellidos": "Ramírez",
+  "tipo": "alumno",
+  "alumno": {
+    "noControl": "21010310",
+    "semestre": 9,
+    "carrera": 1,
+    "nombreCarrera": "Ingeniería en Sistemas Computacionales",
+    "tutor": {
+      "nombre": "Ana",
+      "apellidos": "Segundo Sevilla",
+      "email": "ana@example.com",
+      "noDocente": "S14578963",
+      "horasTutoria": 25,
+      "carrera": 1,
+      "nombreCarrera": "Ingeniería en Sistemas Computacionales",
+      "status": "activo"
+    }
+  },
+  "tutorId": {
+    "$oid": "683bb4243b96d1efda964d5b"
+  },
+  "status": "activo",
+  "fechaRegistro": {
+    "$date": "2025-05-31T23:44:26.756Z"
+  },
+  "password": "$2b$12$zKicXGfXo1c/rljm4mX/duWZ.1ownVX4P1Jus0v5fJRsK2JHRGDvW"
+},
+{
+  "_id": {
+    "$oid": "683bb5dd3b96d1efda964d5d"
+  },
+  "email": "betocoordi@example.com",
+  "nombre": "Alberto",
+  "apellidos": "Díaz Vásquez",
+  "tipo": "coordinador",
+  "coordinador": {
+    "noEmpleado": "SD124578",
+    "departamento": "CCO",
+    "carrera": 1,
+    "nombreCarrera": "Ingeniería en Sistemas Computacionales"
+  },
+  "status": "activo",
+  "fechaRegistro": {
+    "$date": "2025-06-01T00:13:26.637Z"
+  },
+  "password": "$2b$12$RUVMW3gvf20J1nFmG0qrpuFSfA5B1BTksSuQ2OSIWbY7d62C1ZlH6"
+}]

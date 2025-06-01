@@ -164,3 +164,4 @@ lerna-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+*.xml

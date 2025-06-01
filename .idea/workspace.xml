@@ -5,9 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5cd5ee04-ee2c-428b-84b9-0723dabce3b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/dao/auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dao/usuariosDAO.py" beforeDir="false" afterPath="$PROJECT_DIR$/dao/usuariosDAO.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/usuariosModel.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/usuariosModel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/AsistenciasFastAPI.usuarios.json" beforeDir="false" afterPath="$PROJECT_DIR$/database/AsistenciasFastAPI.usuarios.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routers/usuariosRouter.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/usuariosRouter.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

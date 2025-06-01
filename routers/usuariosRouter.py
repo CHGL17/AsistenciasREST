@@ -7,8 +7,12 @@ from models.usuariosModel import (
     # , ActualizarTutorRequest,
     # ActualizarCoordinadorRequest, ActualizarAlumnoRequest
 )
+from dao.auth import create_access_token, require_coordinador
 from dao.usuariosDAO import UsuarioDAO
 from typing import Annotated
+from fastapi.security import OAuth2PasswordRequestForm
+import bcrypt
+from dao.database import Conexion
 
 # Configuración básica del router
 router = APIRouter(
@@ -35,6 +39,22 @@ def get_current_user():
 
 
 # ============ ENDPOINTS ============ #
+
+# LogIn
+@router.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    db = Conexion().getDB()
+    user = db["usuarios"].find_one({"email": form_data.username})
+
+    if not user or not bcrypt.checkpw(form_data.password.encode("utf-8"), user["password"].encode("utf-8")):
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+
+    if user["status"] != "activo":
+        raise HTTPException(status_code=403, detail="Usuario inactivo")
+
+    token = create_access_token(data={"user_id": str(user["_id"]), "tipo": user["tipo"]})
+    return {"access_token": token, "token_type": "bearer"}
+
 
 # Registro público para alumnos
 @router.post("/publico/alumno", response_model=Salida, status_code=status.HTTP_201_CREATED,
@@ -151,7 +171,7 @@ def actualizar_coordinador(
 
 # Eliminar usuario
 @router.delete(
-    "/{id_usuario}",
+    "/usuarios/{id_usuario}",
     response_model=UsuarioEliminadoResponse,
     summary="Eliminar lógicamente un usuario (cambia status a inactivo)",
     responses={
@@ -162,22 +182,30 @@ def actualizar_coordinador(
     }
 )
 def eliminar_usuario_logico(
-        id_usuario: str,
-        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
+    id_usuario: str,
+    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+    current_user: dict = Depends(require_coordinador)
 ):
-    resultado = usuario_dao.eliminar_usuario_logico(id_usuario)
+    try:
+        resultado = usuario_dao.eliminar_usuario_logico(id_usuario)
 
-    if resultado["estatus"] == "ERROR":
-        raise HTTPException(
-            status_code=resultado["status_code"],
-            detail=resultado["mensaje"]
+        if resultado["estatus"] == "ERROR":
+            raise HTTPException(
+                status_code=resultado["status_code"],
+                detail=resultado["mensaje"]
+            )
+
+        return UsuarioEliminadoResponse(
+            mensaje=resultado["mensaje"],
+            detalles_eliminacion={
+                "usuario": resultado["usuario_eliminado"],
+                "operacion": "eliminacion_logica"
+            },
+            coordinador_autorizador=current_user["nombre"] + " " + current_user["apellidos"]
         )
 
-    return UsuarioEliminadoResponse(
-        mensaje=resultado["mensaje"],
-        detalles_eliminacion={
-            "usuario": resultado["usuario_eliminado"],
-            "operacion": "eliminacion_logica"
-        },
-        coordinador_autorizador="(pendiente_autenticacion_jwt)"
-    )
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de usuario inválido")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
+

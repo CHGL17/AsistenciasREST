@@ -14,7 +14,7 @@ class GrupoDAO:
         salida = Salida(estatus="", mensaje="")
         try:
             # Validar existencia de ciclo, carrera y tutor
-            ciclo = self.db.ciclos.find_one({"_id": grupo.ciclo})
+            ciclo = self.db.ciclos.find_one({"_id": ObjectId(grupo.ciclo)})
             if not ciclo:
                 salida.estatus = "ERROR"
                 salida.mensaje = "El ciclo especificado no existe"

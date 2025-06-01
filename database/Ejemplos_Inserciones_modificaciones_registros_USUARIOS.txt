@@ -1,0 +1,62 @@
+{
+  "email": "isc_mramirez2021@accitesz.com",
+  "nombre": "Manuel",
+  "apellidos": "Ramírez",
+  "tipo": "alumno",
+  "password": "Hola.123!",
+  "alumno": {
+    "noControl": "21010310",
+    "semestre": 9,
+    "carrera": 1,
+    "nombreCarrera": "Ingeniería en Sistemas Computacionales",
+    "tutor": {
+      "nombre": "Ana",
+      "apellidos": "Segundo Sevilla",
+      "email": "ana@example.com",
+      "noDocente": "S14578963",
+      "horasTutoria": 25,
+      "carrera": 1,
+      "nombreCarrera": "Ingeniería en Sistemas Computacionales",
+      "status": "activo"
+    }
+  },
+  "tutorId": "683bb4243b96d1efda964d5b",
+  "status": "activo",
+  "fechaRegistro": "2025-06-01T04:46:07.159Z"
+}
+
+
+{
+  "email": "ana@example.com",
+  "nombre": "Ana",
+  "apellidos": "Segundo Sevilla",
+  "tipo": "tutor",
+  "password": "Hola.123!",
+  "tutor": {
+    "noDocente": "S14578963",
+    "horasTutoria": 25,
+    "carrera": 1,
+    "nombreCarrera": "Ingeniería en Sistemas Computacionales"
+  },
+  "status": "activo",
+  "fechaRegistro": "2025-06-01T04:36:06.733Z"
+}
+
+
+
+
+{
+  "email": "betocoordi@example.com",
+  "nombre": "Alberto",
+  "apellidos": "Díaz Vásquez",
+  "tipo": "coordinador",
+  "password": "Hola.123!",
+  "coordinador": {
+    "noEmpleado": "SD124578",
+    "departamento": "CCO",
+    "carrera": 1,
+    "nombreCarrera": "Ingeniería en Sistemas Computacionales"
+  },
+  "status": "activo",
+  "fechaRegistro": "2025-06-01T05:28:24.752Z"
+}

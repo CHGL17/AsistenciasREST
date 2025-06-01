@@ -98,6 +98,31 @@ def validar_acceso_consulta(current_user: dict, tipo_objetivo: str, id_usuario: 
 
     raise HTTPException(status_code=403, detail="Tipo de usuario no reconocido")
 
+# Para la actualización por accesos explícitos
+def validar_acceso_actualizacion(current_user: dict, tipo_objetivo: str, id_objetivo: str):
+    tipo_actual = current_user["tipo"]
+    id_actual = str(current_user["_id"])
+
+    # Siempre puedes actualizarte a ti mismo
+    if id_actual == id_objetivo:
+        return
+
+    # Coordinador puede actualizar a todos
+    if tipo_actual == "coordinador":
+        return
+
+    # Alumno solo puede actualizarse a sí mismo
+    if tipo_actual == "alumno":
+        raise HTTPException(status_code=403, detail="Un alumno solo puede actualizarse a sí mismo")
+
+    # Tutor solo puede actualizarse a sí mismo
+    if tipo_actual == "tutor":
+        if tipo_objetivo != "tutor":
+            raise HTTPException(status_code=403, detail="Un tutor no puede modificar otros tipos de usuarios")
+        raise HTTPException(status_code=403, detail="Un tutor solo puede actualizarse a sí mismo")
+
+    raise HTTPException(status_code=403, detail="Tipo de usuario no reconocido para actualización")
+
 
 # No lo uso ya...
 # dao/auth.py (Usuarios-Tutor)

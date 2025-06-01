@@ -7,7 +7,7 @@ from models.usuariosModel import (
     # , ActualizarTutorRequest,
     # ActualizarCoordinadorRequest, ActualizarAlumnoRequest
 )
-from dao.auth import create_access_token, require_coordinador
+from dao.auth import create_access_token, require_coordinador, require_roles, require_rol
 from dao.usuariosDAO import UsuarioDAO
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
@@ -57,9 +57,18 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 # Registro público para alumnos
-@router.post("/publico/alumno", response_model=Salida, status_code=status.HTTP_201_CREATED,
-             summary="Registro público para alumnos", response_description="Resultado del registro")
-def registro_publico(usuario: UsuarioAlumnoInsert, usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]):
+@router.post(
+    "/privado/alumno",
+    response_model=Salida,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registro privado para alumnos",
+    response_description="Resultado del registro"
+)
+def registro_alumno(
+        usuario: UsuarioAlumnoInsert,
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(require_roles(["alumno", "coordinador"]))  # 🔒 solo alumnos y coordinadores
+):
     resultado = usuario_dao.agregarUsuario(usuario)
     if resultado.estatus == "ERROR":
         raise HTTPException(
@@ -70,9 +79,18 @@ def registro_publico(usuario: UsuarioAlumnoInsert, usuario_dao: Annotated[Usuari
 
 
 # Registro para tutores (requiere autenticación)
-@router.post("/privado/tutor", response_model=Salida, status_code=status.HTTP_201_CREATED,
-             summary="Registro para tutores", response_description="Resultado del registro")
-def registro_tutor(usuario: UsuarioTutorInsert, usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]):
+@router.post(
+    "/privado/tutor",
+    response_model=Salida,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registro para tutores",
+    response_description="Resultado del registro"
+)
+def registro_tutor(
+        usuario: UsuarioTutorInsert,
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(require_roles(["tutor", "coordinador"]))  # ✅ permite ambos
+):
     resultado = usuario_dao.agregarUsuario(usuario)
     if resultado.estatus == "ERROR":
         raise HTTPException(
@@ -83,9 +101,18 @@ def registro_tutor(usuario: UsuarioTutorInsert, usuario_dao: Annotated[UsuarioDA
 
 
 # Registro para coordinadores (requiere autenticación)
-@router.post("/privado/coordinador", response_model=Salida, status_code=status.HTTP_201_CREATED,
-             summary="Registro para coordinadores", response_description="Resultado del registro")
-def registro_coordinador(usuario: UsuarioCoordInsert, usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]):
+@router.post(
+    "/privado/coordinador",
+    response_model=Salida,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registro para coordinadores",
+    response_description="Resultado del registro"
+)
+def registro_coordinador(
+        usuario: UsuarioCoordInsert,
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(require_rol("coordinador"))  # 🔒 sólo coordinadores
+):
     resultado = usuario_dao.agregarUsuario(usuario)
     if resultado.estatus == "ERROR":
         raise HTTPException(
@@ -96,6 +123,7 @@ def registro_coordinador(usuario: UsuarioCoordInsert, usuario_dao: Annotated[Usu
 
 
 # Consultar usuario por ID
+
 @router.get("/{id_usuario}", response_model=UsuarioSalidaID, summary="Consultar un usuario por su ID",
             responses={
                 404: {"model": UsuarioSalidaID, "description": "Usuario no encontrado"},
@@ -103,7 +131,8 @@ def registro_coordinador(usuario: UsuarioCoordInsert, usuario_dao: Annotated[Usu
             })
 def consultar_usuario_por_id(
         id_usuario: str,
-        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(lambda: require_self_or_coordinador(id_usuario))
 ):
     resultado = usuario_dao.consultarUsuarioPorID(id_usuario)
     if resultado.estatus == "ERROR":
@@ -143,7 +172,7 @@ def actualizar_tutor(
         id_usuario: str,
         datos: UsuarioTutorInsert,
         usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-        current_user: dict = Depends(get_current_user)
+        current_user: dict = Depends(lambda: require_self_or_coordinador(id_usuario))
 ):
     datos_dict = datos.model_dump(exclude_unset=True)
     resultado = usuario_dao.actualizar_tutor(id_usuario, datos_dict, current_user)
@@ -182,9 +211,9 @@ def actualizar_coordinador(
     }
 )
 def eliminar_usuario_logico(
-    id_usuario: str,
-    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-    current_user: dict = Depends(require_coordinador)
+        id_usuario: str,
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(require_coordinador)
 ):
     try:
         resultado = usuario_dao.eliminar_usuario_logico(id_usuario)
@@ -208,4 +237,3 @@ def eliminar_usuario_logico(
         raise HTTPException(status_code=400, detail="ID de usuario inválido")
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
-

@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from bson import ObjectId
+from dao.database import Conexion
 import bcrypt
 import os
 
@@ -42,6 +43,34 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     if not user:
         raise credentials_exception
     return user
+
+# Validación de acceso a rutas explícitas de registro de usuarios Alumno-Tutor-Coordinador (útil para varios roles)
+
+def require_roles(roles_permitidos: list[str]):
+    def _verifica_roles(current_user: dict = Depends(get_current_user)):
+        if current_user["tipo"] not in roles_permitidos:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Acceso solo permitido a usuarios tipo: {', '.join(roles_permitidos)}"
+            )
+        return current_user
+    return _verifica_roles
+
+# Exclusivo al coordinador
+def require_rol(rol_requerido: str):
+    def _verifica_rol(current_user: dict = Depends(get_current_user)):
+        if current_user["tipo"] != rol_requerido:
+            raise HTTPException(status_code=403, detail=f"Acceso solo permitido a usuarios tipo '{rol_requerido}'")
+        return current_user
+    return _verifica_rol
+
+# dao/auth.py (Usuarios-Tutor)
+def require_self_or_coordinador(id_objetivo: str, current_user: dict = Depends(get_current_user)):
+    if current_user["tipo"] == "coordinador":
+        return current_user
+    if str(current_user["_id"]) != id_objetivo:
+        raise HTTPException(status_code=403, detail="Solo puedes acceder o modificar tu propia cuenta")
+    return current_user
 
 # Verificar si es coordinador
 def require_coordinador(current_user: dict = Depends(get_current_user)):

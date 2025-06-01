@@ -117,6 +117,26 @@ class UsuarioDAO:
                         mensaje="El objeto tutor embebido no coincide con el documento real del tutor"
                     )
 
+                tutor_doc = None
+                if hasattr(usuario, "tutorId") and usuario.tutorId:
+                    try:
+                        tutor_oid = ObjectId(usuario.tutorId)
+                    except Exception:
+                        return Salida(
+                            estatus="ERROR",
+                            mensaje="El ID del tutor no tiene un formato válido"
+                        )
+
+                    tutor_doc = self.usuarios.find_one({
+                        "_id": tutor_oid,
+                        "tipo": "tutor"
+                    })
+                    if not tutor_doc:
+                        return Salida(
+                            estatus="ERROR",
+                            mensaje="El tutor especificado no existe o no es válido"
+                        )
+
             elif isinstance(usuario, UsuarioTutorInsert):
                 if not re.match(r'^[A-Za-z]\d{4,9}$', usuario.tutor.noDocente):
                     return Salida(estatus="ERROR",

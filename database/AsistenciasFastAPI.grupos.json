@@ -1,0 +1,26 @@
+[{
+  "_id": {
+    "$oid": "6824370bf39dca874a830108"
+  },
+  "nombre": "A",
+  "semestre": 8,
+  "ciclo": "67d5069a5c4a73aca45548b8",
+  "carrera": 1,
+  "tutor": "6823a1a6f9304440ce512619",
+  "alumnos": [
+    "6823a125f9304440ce512618"
+  ]
+},
+{
+  "_id": {
+    "$oid": "68243722f39dca874a830109"
+  },
+  "nombre": "6",
+  "semestre": 7,
+  "ciclo": "67d5069a5c4a73aca45548b8",
+  "carrera": 1,
+  "tutor": "6823a1a6f9304440ce512619",
+  "alumnos": [
+    "6823a125f9304440ce512618"
+  ]
+}]

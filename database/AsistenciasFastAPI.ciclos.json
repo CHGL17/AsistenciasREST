@@ -1,0 +1,24 @@
+[{
+  "_id": {
+    "$oid": "682468e99f0cea18ca62ee86"
+  },
+  "ciclo": "FEB-AGO",
+  "fechaInicio": {
+    "$date": "2024-12-13T00:00:00.000Z"
+  },
+  "fechaFin": {
+    "$date": "2025-08-06T00:00:00.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68368d9ec566028fc6a0186e"
+  },
+  "ciclo": "SEP-DIC",
+  "fechaInicio": {
+    "$date": "2025-09-13T00:00:00.000Z"
+  },
+  "fechaFin": {
+    "$date": "2025-12-06T00:00:00.000Z"
+  }
+}]

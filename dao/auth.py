@@ -4,6 +4,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from bson import ObjectId
+from dao.dependencies import get_usuario_dao
+from dao.usuariosDAO import UsuarioDAO
+
 from dao.database import Conexion
 import bcrypt
 import os
@@ -72,16 +75,28 @@ def require_rol(rol_requerido: str):
 
 
 # Para consulta individual sólo si estás logueado:
-def require_same_user(
-        id_usuario: str,
-        current_user: dict = Depends(get_current_user)
-):
-    if str(current_user["_id"]) != id_usuario:
-        raise HTTPException(
-            status_code=403,
-            detail="Solo puedes consultar tu propio usuario"
-        )
-    return current_user
+
+def validar_acceso_consulta(current_user: dict, tipo_objetivo: str, id_usuario: str):
+    tipo_actual = current_user["tipo"]
+    id_actual = str(current_user["_id"])
+
+    # Siempre puede consultarse a sí mismo
+    if id_actual == id_usuario:
+        return
+
+    # Jerarquía de acceso
+    if tipo_actual == "alumno":
+        raise HTTPException(status_code=403, detail="Como alumno, sólo tienes la posibilidad de consultarte a ti mismo")
+
+    if tipo_actual == "tutor":
+        if tipo_objetivo != "alumno":
+            raise HTTPException(status_code=403, detail="Como tutor, sólo tienes la posibilidad de consultarte a ti mismo")
+        return
+
+    if tipo_actual == "coordinador":
+        return  # Coordinador tiene full access
+
+    raise HTTPException(status_code=403, detail="Tipo de usuario no reconocido")
 
 
 # No lo uso ya...

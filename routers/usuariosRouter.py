@@ -7,7 +7,8 @@ from models.usuariosModel import (
     # , ActualizarTutorRequest,
     # ActualizarCoordinadorRequest, ActualizarAlumnoRequest
 )
-from dao.auth import create_access_token, require_coordinador, require_roles, require_rol, require_same_user
+from dao.dependencies import get_usuario_dao
+from dao.auth import create_access_token, require_coordinador, require_roles, require_rol
 from dao.usuariosDAO import UsuarioDAO
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
@@ -29,8 +30,6 @@ security = HTTPBearer()
 
 
 # Función para obtener el DAO
-def get_usuario_dao(request: Request) -> UsuarioDAO:
-    return UsuarioDAO(request.app.db)
 
 
 # Función simulada de autenticación (TEMPORAL - para desarrollo)
@@ -123,6 +122,9 @@ def registro_coordinador(
 
 
 # Consultar usuario por ID
+from dao.auth import get_current_user, validar_acceso_consulta
+
+
 @router.get("/{id_usuario}", response_model=UsuarioSalidaID, summary="Consultar un usuario por su ID",
             responses={
                 403: {"description": "Acceso denegado"},
@@ -130,18 +132,23 @@ def registro_coordinador(
                 500: {"model": UsuarioSalidaID, "description": "Error interno del servidor"}
             })
 def consultar_usuario_por_id(
-    id_usuario: str,
-    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-    current_user: dict = Depends(require_same_user)  # 🔒 validación de identidad por ID
+        id_usuario: str,
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(get_current_user)
 ):
     resultado = usuario_dao.consultarUsuarioPorID(id_usuario)
+
     if resultado.estatus == "ERROR":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND if "no encontrado" in resultado.mensaje else status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=resultado.mensaje
         )
-    return resultado
 
+    tipo_objetivo = resultado.usuario.tipo  # ✅ Corregido
+
+    validar_acceso_consulta(current_user, tipo_objetivo, id_usuario)
+
+    return resultado
 
 
 # Consulta general de usuarios

@@ -3,9 +3,9 @@ from fastapi import APIRouter, Request, HTTPException, status, Depends, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from models.usuariosModel import (
     UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida,
-    UsuarioSalidaID, UsuarioSalidaLista, EliminarUsuarioRequest,
-    UsuarioEliminadoResponse, ActualizarTutorRequest,
-    ActualizarCoordinadorRequest, ActualizarAlumnoRequest
+    UsuarioSalidaID, UsuarioSalidaLista, UsuarioEliminadoResponse
+    # , ActualizarTutorRequest,
+    # ActualizarCoordinadorRequest, ActualizarAlumnoRequest
 )
 from dao.usuariosDAO import UsuarioDAO
 from typing import Annotated
@@ -23,9 +23,11 @@ router = APIRouter(
 # Configuración de seguridad
 security = HTTPBearer()
 
+
 # Función para obtener el DAO
 def get_usuario_dao(request: Request) -> UsuarioDAO:
     return UsuarioDAO(request.app.db)
+
 
 # Función simulada de autenticación (TEMPORAL - para desarrollo)
 def get_current_user():
@@ -99,122 +101,73 @@ def consulta_general_usuarios(usuario_dao: Annotated[UsuarioDAO, Depends(get_usu
     return usuario_dao.consultaGeneralUsuarios()
 
 
-# Actualizar usuario
-
-@router.put(
-    "/alumno/{id_usuario}",
-    response_model=Salida,
-    summary="Actualizar información de un alumno",
-    responses={
-        200: {"description": "Alumno actualizado exitosamente"},
-        400: {"description": "Datos inválidos o sin cambios"},
-        403: {"description": "No autorizado"},
-        404: {"description": "Alumno no encontrado"},
-        500: {"description": "Error interno del servidor"}
-    }
-)
-async def actualizar_alumno(
-    id_usuario: str,
-    datos_actualizacion: ActualizarAlumnoRequest,
-    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-    current_user: dict = Depends(get_current_user)
+# === ACTUALIZAR ALUMNO ===
+@router.put("/alumno/{id_usuario}", response_model=Salida)
+def actualizar_alumno(
+        id_usuario: str,
+        datos: UsuarioAlumnoInsert,  # Se usa el mismo modelo de registro
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(get_current_user)
 ):
-    datos_dict = datos_actualizacion.model_dump(exclude_unset=True)
+    datos_dict = datos.model_dump(exclude_unset=True)
     resultado = usuario_dao.actualizar_alumno(id_usuario, datos_dict, current_user)
 
     if resultado["estatus"] == "ERROR":
         raise HTTPException(status_code=resultado["status_code"], detail=resultado["mensaje"])
-
     return Salida(estatus="OK", mensaje="Alumno actualizado correctamente.")
 
 
-# Actualizar TUTOR
-@router.put(
-    "/tutor/{id_usuario}",
-    response_model=Salida,
-    summary="Actualizar información de un tutor",
-    responses={
-        200: {"description": "Tutor actualizado exitosamente"},
-        400: {"description": "Datos inválidos o sin cambios"},
-        403: {"description": "No autorizado"},
-        404: {"description": "Tutor no encontrado"},
-        500: {"description": "Error interno del servidor"}
-    }
-)
-async def actualizar_tutor(
-    id_usuario: str,
-    datos_actualizacion: ActualizarTutorRequest,
-    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-    current_user: dict = Depends(get_current_user)
+# === ACTUALIZAR TUTOR ===
+@router.put("/tutor/{id_usuario}", response_model=Salida)
+def actualizar_tutor(
+        id_usuario: str,
+        datos: UsuarioTutorInsert,
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(get_current_user)
 ):
-    datos_dict = datos_actualizacion.model_dump(exclude_unset=True)
+    datos_dict = datos.model_dump(exclude_unset=True)
     resultado = usuario_dao.actualizar_tutor(id_usuario, datos_dict, current_user)
 
     if resultado["estatus"] == "ERROR":
         raise HTTPException(status_code=resultado["status_code"], detail=resultado["mensaje"])
-
     return Salida(estatus="OK", mensaje="Tutor actualizado correctamente.")
 
 
-# Actualizar COORDINADOR
-@router.put(
-    "/coordinador/{id_usuario}",
-    response_model=Salida,
-    summary="Actualizar información de un coordinador",
-    responses={
-        200: {"description": "Coordinador actualizado exitosamente"},
-        400: {"description": "Datos inválidos o sin cambios"},
-        403: {"description": "No autorizado"},
-        404: {"description": "Coordinador no encontrado"},
-        500: {"description": "Error interno del servidor"}
-    }
-)
-async def actualizar_coordinador(
-    id_usuario: str,
-    datos_actualizacion: ActualizarCoordinadorRequest,
-    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-    current_user: dict = Depends(get_current_user)
+# === ACTUALIZAR COORDINADOR ===
+@router.put("/coordinador/{id_usuario}", response_model=Salida)
+def actualizar_coordinador(
+        id_usuario: str,
+        datos: UsuarioCoordInsert,
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(get_current_user)
 ):
-    datos_dict = datos_actualizacion.model_dump(exclude_unset=True)
+    datos_dict = datos.model_dump(exclude_unset=True)
     resultado = usuario_dao.actualizar_coordinador(id_usuario, datos_dict, current_user)
 
     if resultado["estatus"] == "ERROR":
         raise HTTPException(status_code=resultado["status_code"], detail=resultado["mensaje"])
-
     return Salida(estatus="OK", mensaje="Coordinador actualizado correctamente.")
+
+
 # Eliminar usuario
 @router.delete(
     "/{id_usuario}",
     response_model=UsuarioEliminadoResponse,
-    summary="Eliminar un usuario permanentemente",
+    summary="Eliminar lógicamente un usuario (cambia status a inactivo)",
     responses={
-        200: {"description": "Usuario eliminado con éxito"},
+        200: {"description": "Usuario desactivado con éxito"},
         400: {"description": "ID inválido"},
-        403: {"description": "No autorizado"},
         404: {"description": "Usuario no encontrado"},
-        409: {"description": "El usuario tiene dependencias"},
         500: {"description": "Error interno del servidor"}
     }
 )
-def eliminar_usuario(
+def eliminar_usuario_logico(
         id_usuario: str,
-        datos_autorizacion: EliminarUsuarioRequest,
         usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]
 ):
-    resultado = usuario_dao.eliminar_usuario(
-        id_usuario=id_usuario,
-        no_empleado_coordinador=datos_autorizacion.no_empleado_coordinador
-    )
+    resultado = usuario_dao.eliminar_usuario_logico(id_usuario)
 
     if resultado["estatus"] == "ERROR":
-        if resultado.get("usuario"):
-            raise HTTPException(
-                status_code=resultado["status_code"],
-                detail={
-                    "mensaje": resultado["mensaje"],
-                    "usuario": resultado["usuario"]
-                }
-            )
         raise HTTPException(
             status_code=resultado["status_code"],
             detail=resultado["mensaje"]
@@ -224,7 +177,7 @@ def eliminar_usuario(
         mensaje=resultado["mensaje"],
         detalles_eliminacion={
             "usuario": resultado["usuario_eliminado"],
-            "operacion": "eliminacion_permanente"
+            "operacion": "eliminacion_logica"
         },
-        coordinador_autorizador=resultado["no_empleado_coordinador"]
+        coordinador_autorizador="(pendiente_autenticacion_jwt)"
     )

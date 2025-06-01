@@ -1,5 +1,5 @@
-from models.usuariosModel import (UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida, AlumnoModel,
-                                  TutorModel, CoordinadorModel, AlumnoResponse, TutorResponse, CoordinadorResponse,
+from models.usuariosModel import (UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert, Salida,
+                                  AlumnoResponse, TutorResponse, CoordinadorResponse,
                                   UsuarioSalidaID, UsuarioSalidaLista,
                                   )
 from fastapi.encoders import jsonable_encoder
@@ -43,12 +43,12 @@ class UsuarioDAO:
             return "Los apellidos solo pueden contener letras y espacios"
         return None
 
-    def agregarUsuario(
-            self,
-            usuario: Union[UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert]
-    ) -> Salida:
+    def _validar_nombre_carrera(self, carrera_id: int, nombre: str) -> bool:
+        doc = self.carreras.find_one({"_id": carrera_id})
+        return doc is not None and doc.get("nombre", "").strip().lower() == nombre.strip().lower()
+
+    def agregarUsuario(self, usuario: Union[UsuarioAlumnoInsert, UsuarioTutorInsert, UsuarioCoordInsert]) -> Salida:
         try:
-            # Validaciones generales
             error_nombre = self._validar_nombre_apellidos(usuario.nombre, usuario.apellidos)
             if error_nombre:
                 return Salida(estatus="ERROR", mensaje=error_nombre)
@@ -57,122 +57,110 @@ class UsuarioDAO:
             if error_password:
                 return Salida(estatus="ERROR", mensaje=error_password)
 
-            # Validar email único
             if self.usuarios.find_one({"email": usuario.email}):
-                return Salida(
-                    estatus="ERROR",
-                    mensaje="El correo electrónico ya está registrado"
-                )
+                return Salida(estatus="ERROR", mensaje="El correo electrónico ya está registrado")
 
-            # Validaciones específicas por tipo
             if isinstance(usuario, UsuarioAlumnoInsert):
                 if not re.match(r'^\d{8}$', usuario.alumno.noControl):
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="El número de control debe tener exactamente 8 dígitos"
-                    )
+                    return Salida(estatus="ERROR", mensaje="El número de control debe tener exactamente 8 dígitos")
 
                 if usuario.alumno.semestre < 1 or usuario.alumno.semestre > 12:
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="El semestre debe estar entre 1 y 12"
-                    )
+                    return Salida(estatus="ERROR", mensaje="El semestre debe estar entre 1 y 12")
 
                 if not self._validar_carrera(usuario.alumno.carrera):
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="La carrera especificada no existe"
-                    )
+                    return Salida(estatus="ERROR", mensaje="La carrera especificada no existe")
+
+                if not self._validar_nombre_carrera(usuario.alumno.carrera, usuario.alumno.nombreCarrera):
+                    return Salida(estatus="ERROR",
+                                  mensaje="El nombre de la carrera del alumno no coincide con el ID proporcionado")
 
                 if self.usuarios.find_one({"alumno.noControl": usuario.alumno.noControl}):
+                    return Salida(estatus="ERROR", mensaje="El número de control ya está registrado")
+
+                if not usuario.tutorId:
+                    return Salida(estatus="ERROR", mensaje="Debe proporcionarse el ID del tutor")
+
+                try:
+                    tutor_oid = ObjectId(usuario.tutorId)
+                except Exception:
+                    return Salida(estatus="ERROR", mensaje="El ID del tutor no tiene un formato válido")
+
+                tutor_doc = self.usuarios.find_one({
+                    "_id": tutor_oid,
+                    "tipo": "tutor",
+                    "status": "activo"
+                })
+
+                if not tutor_doc:
                     return Salida(
                         estatus="ERROR",
-                        mensaje="El número de control ya está registrado"
+                        mensaje="El tutor especificado no existe, no es válido o está inactivo"
                     )
 
-                tutor_doc = None
-                if hasattr(usuario, "tutorId") and usuario.tutorId:
-                    try:
-                        tutor_oid = ObjectId(usuario.tutorId)
-                    except Exception:
-                        return Salida(
-                            estatus="ERROR",
-                            mensaje="El ID del tutor no tiene un formato válido"
-                        )
+                t = usuario.alumno.tutor
+                if not t:
+                    return Salida(estatus="ERROR", mensaje="Debe proporcionarse el objeto tutor embebido")
 
-                    tutor_doc = self.usuarios.find_one({
-                        "_id": tutor_oid,
-                        "tipo": "tutor"
-                    })
-                    if not tutor_doc:
-                        return Salida(
-                            estatus="ERROR",
-                            mensaje="El tutor especificado no existe o no es válido"
-                        )
+                if (
+                        t.nombre != tutor_doc["nombre"]
+                        or t.apellidos != tutor_doc["apellidos"]
+                        or t.email != tutor_doc["email"]
+                        or t.status != tutor_doc["status"]
+                        or t.noDocente != tutor_doc["tutor"]["noDocente"]
+                        or t.horasTutoria != tutor_doc["tutor"]["horasTutoria"]
+                        or t.carrera != tutor_doc["tutor"]["carrera"]
+                        or t.nombreCarrera != tutor_doc["tutor"]["nombreCarrera"]
+                        or not self._validar_nombre_carrera(t.carrera, t.nombreCarrera)
+                ):
+                    return Salida(
+                        estatus="ERROR",
+                        mensaje="El objeto tutor embebido no coincide con el documento real del tutor"
+                    )
 
             elif isinstance(usuario, UsuarioTutorInsert):
                 if not re.match(r'^[A-Za-z]\d{4,9}$', usuario.tutor.noDocente):
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="El número de docente debe comenzar con letra seguida de 4 a 9 dígitos"
-                    )
+                    return Salida(estatus="ERROR",
+                                  mensaje="El número de docente debe comenzar con letra seguida de 4 a 9 dígitos")
 
                 if usuario.tutor.horasTutoria < 1 or usuario.tutor.horasTutoria > 40:
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="Las horas de tutoría deben estar entre 1 y 40"
-                    )
+                    return Salida(estatus="ERROR", mensaje="Las horas de tutoría deben estar entre 1 y 40")
 
                 if not self._validar_carrera(usuario.tutor.carrera):
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="La carrera especificada no existe"
-                    )
+                    return Salida(estatus="ERROR", mensaje="La carrera especificada no existe")
+
+                if not self._validar_nombre_carrera(usuario.tutor.carrera, usuario.tutor.nombreCarrera):
+                    return Salida(estatus="ERROR",
+                                  mensaje="El nombre de la carrera no coincide con el ID proporcionado")
 
                 if self.usuarios.find_one({"tutor.noDocente": usuario.tutor.noDocente}):
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="El número de docente ya está registrado"
-                    )
+                    return Salida(estatus="ERROR", mensaje="El número de docente ya está registrado")
 
             elif isinstance(usuario, UsuarioCoordInsert):
                 if not re.match(r'^[A-Za-z]{2}\d{3,8}$', usuario.coordinador.noEmpleado):
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="El número de empleado debe comenzar con 2 letras seguidas de 3 a 8 dígitos"
-                    )
+                    return Salida(estatus="ERROR",
+                                  mensaje="El número de empleado debe comenzar con 2 letras seguidas de 3 a 8 dígitos")
 
                 if len(usuario.coordinador.departamento) < 3 or len(usuario.coordinador.departamento) > 50:
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="El departamento debe tener entre 3 y 50 caracteres"
-                    )
+                    return Salida(estatus="ERROR", mensaje="El departamento debe tener entre 3 y 50 caracteres")
 
                 if not self._validar_carrera(usuario.coordinador.carrera):
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="La carrera especificada no existe"
-                    )
+                    return Salida(estatus="ERROR", mensaje="La carrera especificada no existe")
+
+                if not self._validar_nombre_carrera(usuario.coordinador.carrera, usuario.coordinador.nombreCarrera):
+                    return Salida(estatus="ERROR",
+                                  mensaje="El nombre de la carrera no coincide con el ID proporcionado")
 
                 if self.usuarios.find_one({"coordinador.noEmpleado": usuario.coordinador.noEmpleado}):
-                    return Salida(
-                        estatus="ERROR",
-                        mensaje="El número de empleado ya está registrado"
-                    )
+                    return Salida(estatus="ERROR", mensaje="El número de empleado ya está registrado")
 
-            # Hashear la contraseña
-            hashed_password = bcrypt.hashpw(
-                usuario.password.encode('utf-8'),
-                bcrypt.gensalt()
-            )
-
-            # Preparar documento para MongoDB
+            hashed_password = bcrypt.hashpw(usuario.password.encode('utf-8'), bcrypt.gensalt())
             usuario_dict = usuario.model_dump(exclude={"password"})
             usuario_dict["password"] = hashed_password.decode("utf-8")
-            if tutor_doc:
-                usuario_dict["tutorId"] = tutor_doc["_id"]
+            usuario_dict["status"] = usuario.status
 
-            # Insertar en la base de datos
+            if hasattr(usuario, "tutorId") and usuario.tutorId:
+                usuario_dict["tutorId"] = ObjectId(usuario.tutorId)
+
             result = self.usuarios.insert_one(usuario_dict)
 
             return Salida(
@@ -183,10 +171,7 @@ class UsuarioDAO:
 
         except Exception as ex:
             print(f"Error al registrar usuario: {str(ex)}")
-            return Salida(
-                estatus="ERROR",
-                mensaje="Ocurrió un error interno al procesar el registro"
-            )
+            return Salida(estatus="ERROR", mensaje="Ocurrió un error interno al procesar el registro")
 
     # Componente DAO para la consulta individual (ID) de usuarios
 
@@ -244,6 +229,7 @@ class UsuarioDAO:
                     "nombre": usuario_data["nombre"],
                     "apellidos": usuario_data["apellidos"],
                     "tipo": usuario_data["tipo"],
+                    "status": usuario_data["status"],
                     "fechaRegistro": usuario_data["fechaRegistro"]
                 }
 
@@ -280,86 +266,242 @@ class UsuarioDAO:
 
     # Componente para la modificación de usuarios
     def actualizar_alumno(self, id_usuario: str, datos_actualizacion: dict, usuario_actual: dict) -> dict:
-        usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario), "tipo": "alumno"})
-        if not usuario:
+        usuario_existente = self.usuarios.find_one({"_id": ObjectId(id_usuario), "tipo": "alumno"})
+        if not usuario_existente:
             return {
                 "estatus": "ERROR",
                 "mensaje": "El usuario no existe o no es un alumno",
                 "status_code": 404
             }
 
-        return self._actualizar_usuario_generico(id_usuario, datos_actualizacion, usuario_actual, "alumno")
-
-    def actualizar_tutor(self, id_usuario: str, datos_actualizacion: dict, usuario_actual: dict) -> dict:
-        usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario), "tipo": "tutor"})
-        if not usuario:
-            return {
-                "estatus": "ERROR",
-                "mensaje": "El usuario no existe o no es un tutor",
-                "status_code": 404
-            }
-
-        return self._actualizar_usuario_generico(id_usuario, datos_actualizacion, usuario_actual, "tutor")
-
-    def actualizar_coordinador(self, id_usuario: str, datos_actualizacion: dict, usuario_actual: dict) -> dict:
-        usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario), "tipo": "coordinador"})
-        if not usuario:
-            return {
-                "estatus": "ERROR",
-                "mensaje": "El usuario no existe o no es un coordinador",
-                "status_code": 404
-            }
-
-        return self._actualizar_usuario_generico(id_usuario, datos_actualizacion, usuario_actual, "coordinador")
-
-    def _actualizar_usuario_generico(
-            self,
-            id_usuario: str,
-            datos_actualizacion: dict,
-            usuario_actual: dict,
-            tipo_usuario: str
-    ) -> dict:
         try:
-            campos_validos = ["nombre", "apellidos", "email", "password", tipo_usuario]
-            datos_set = {}
+            usuario = UsuarioAlumnoInsert(**datos_actualizacion)
 
-            for campo in campos_validos:
-                if campo in datos_actualizacion:
-                    if campo == "password":
-                        hashed_password = bcrypt.hashpw(datos_actualizacion["password"].encode('utf-8'),
-                                                        bcrypt.gensalt())
-                        datos_set["password"] = hashed_password.decode('utf-8')
-                    else:
-                        datos_set[campo] = datos_actualizacion[campo]
+            error_nombre = self._validar_nombre_apellidos(usuario.nombre, usuario.apellidos)
+            if error_nombre:
+                return {"estatus": "ERROR", "mensaje": error_nombre, "status_code": 400}
 
-            if not datos_set:
-                return {
-                    "estatus": "ERROR",
-                    "mensaje": "No se proporcionaron datos válidos para actualizar",
-                    "status_code": 400
-                }
+            error_password = self._validar_password(usuario.password)
+            if error_password:
+                return {"estatus": "ERROR", "mensaje": error_password, "status_code": 400}
 
-            self.usuarios.update_one({"_id": ObjectId(id_usuario)}, {"$set": datos_set})
+            if not re.match(r'^\d{8}$', usuario.alumno.noControl):
+                return {"estatus": "ERROR", "mensaje": "El número de control debe tener exactamente 8 dígitos",
+                        "status_code": 400}
+
+            if usuario.alumno.semestre < 1 or usuario.alumno.semestre > 12:
+                return {"estatus": "ERROR", "mensaje": "El semestre debe estar entre 1 y 12", "status_code": 400}
+
+            if not self._validar_carrera(usuario.alumno.carrera):
+                return {"estatus": "ERROR", "mensaje": "La carrera especificada no existe", "status_code": 400}
+
+            if not self._validar_nombre_carrera(usuario.alumno.carrera, usuario.alumno.nombreCarrera):
+                return {"estatus": "ERROR", "mensaje": "El nombre de la carrera no coincide con el ID",
+                        "status_code": 400}
+
+            if usuario.tutorId:
+                try:
+                    tutor_oid = ObjectId(usuario.tutorId)
+                except Exception:
+                    return {"estatus": "ERROR", "mensaje": "El ID del tutor no tiene un formato válido",
+                            "status_code": 400}
+
+                tutor_doc = self.usuarios.find_one({"_id": tutor_oid, "tipo": "tutor"})
+
+                if not tutor_doc:
+                    return {"estatus": "ERROR",
+                            "mensaje": "El tutor especificado no existe o no es válido",
+                            "status_code": 400}
+
+                t = usuario.alumno.tutor
+                if not t:
+                    return {"estatus": "ERROR", "mensaje": "Debe proporcionarse el objeto tutor embebido",
+                            "status_code": 400}
+
+                campos_tutor = ["nombre", "apellidos", "email", "noDocente", "horasTutoria", "carrera", "nombreCarrera",
+                                "status"]
+                for campo in campos_tutor:
+                    if t.__dict__[campo] != (
+                            tutor_doc["tutor"][campo] if campo not in ["nombre", "apellidos", "email", "status"] else
+                            tutor_doc[campo]):
+                        return {
+                            "estatus": "ERROR",
+                            "mensaje": f"El campo '{campo}' del tutor embebido no coincide con el tutor real",
+                            "status_code": 400
+                        }
+
+            hashed_password = bcrypt.hashpw(usuario.password.encode('utf-8'), bcrypt.gensalt())
+            usuario_dict = usuario.model_dump(exclude={"password"})
+            usuario_dict["password"] = hashed_password.decode("utf-8")
+            usuario_dict["fechaRegistro"] = datetime.now()
+            if usuario.tutorId:
+                usuario_dict["tutorId"] = ObjectId(usuario.tutorId)
+
+            self.usuarios.update_one({"_id": ObjectId(id_usuario)}, {"$set": usuario_dict})
+
+            # Actualizar status del tutor embebido si existe
+            if usuario.tutorId:
+                self.usuarios.update_many(
+                    {
+                        "tipo": "alumno",
+                        "tutorId": ObjectId(usuario.tutorId),
+                        "alumno.tutor": {"$exists": True}
+                    },
+                    {
+                        "$set": {
+                            "alumno.tutor.status": usuario.alumno.tutor.status
+                        }
+                    }
+                )
 
             return {
                 "estatus": "OK",
-                "mensaje": "Usuario actualizado correctamente",
+                "mensaje": "Alumno actualizado correctamente",
                 "status_code": 200
             }
 
         except Exception as ex:
-            print(f"Error al actualizar usuario {id_usuario}: {ex}")
+            print(f"Error al actualizar alumno: {ex}")
             return {
                 "estatus": "ERROR",
-                "mensaje": "Error interno al actualizar el usuario",
+                "mensaje": "Error interno al actualizar el alumno",
+                "status_code": 500
+            }
+
+    # Se repite la lógica para TUTOR y COORDINADOR
+
+    def actualizar_tutor(self, id_usuario: str, datos_actualizacion: dict, current_user: dict) -> dict:
+        try:
+            usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario), "tipo": "tutor"})
+            if not usuario:
+                return {
+                    "estatus": "ERROR",
+                    "mensaje": "El usuario no existe o no es un tutor",
+                    "status_code": 404
+                }
+
+            if error := self._validar_nombre_apellidos(datos_actualizacion.get("nombre", ""),
+                                                       datos_actualizacion.get("apellidos", "")):
+                return {"estatus": "ERROR", "mensaje": error, "status_code": 400}
+
+            if error := self._validar_password(datos_actualizacion.get("password", "Hola123!")):
+                return {"estatus": "ERROR", "mensaje": error, "status_code": 400}
+
+            if "email" in datos_actualizacion:
+                if self.usuarios.find_one(
+                        {"email": datos_actualizacion["email"], "_id": {"$ne": ObjectId(id_usuario)}}):
+                    return {"estatus": "ERROR", "mensaje": "El correo electrónico ya está registrado",
+                            "status_code": 400}
+
+            tutor_data = datos_actualizacion.get("tutor", {})
+            if not tutor_data:
+                return {"estatus": "ERROR", "mensaje": "Datos del tutor requeridos", "status_code": 400}
+
+            if not re.match(r'^[A-Za-z]\d{4,9}$', tutor_data.get("noDocente", "")):
+                return {"estatus": "ERROR",
+                        "mensaje": "El número de docente debe comenzar con letra seguida de 4 a 9 dígitos",
+                        "status_code": 400}
+
+            if not 1 <= tutor_data.get("horasTutoria", 0) <= 40:
+                return {"estatus": "ERROR", "mensaje": "Las horas de tutoría deben estar entre 1 y 40",
+                        "status_code": 400}
+
+            if not self._validar_carrera(tutor_data.get("carrera")):
+                return {"estatus": "ERROR", "mensaje": "La carrera especificada no existe", "status_code": 400}
+
+            if self.usuarios.find_one(
+                    {"tutor.noDocente": tutor_data.get("noDocente"), "_id": {"$ne": ObjectId(id_usuario)}}):
+                return {"estatus": "ERROR", "mensaje": "El número de docente ya está registrado", "status_code": 400}
+
+            datos_actualizacion["fechaRegistro"] = datetime.now()
+            if "password" in datos_actualizacion:
+                datos_actualizacion["password"] = bcrypt.hashpw(datos_actualizacion["password"].encode("utf-8"),
+                                                                bcrypt.gensalt()).decode("utf-8")
+
+            self.usuarios.update_one({"_id": ObjectId(id_usuario)}, {"$set": datos_actualizacion})
+
+            return {
+                "estatus": "OK",
+                "mensaje": "Tutor actualizado correctamente",
+                "status_code": 200
+            }
+
+        except Exception as ex:
+            print(f"Error al actualizar tutor {id_usuario}: {ex}")
+            return {
+                "estatus": "ERROR",
+                "mensaje": "Error interno al actualizar el tutor",
+                "status_code": 500
+            }
+
+    def actualizar_coordinador(self, id_usuario: str, datos_actualizacion: dict, current_user: dict) -> dict:
+        try:
+            usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario), "tipo": "coordinador"})
+            if not usuario:
+                return {
+                    "estatus": "ERROR",
+                    "mensaje": "El usuario no existe o no es un coordinador",
+                    "status_code": 404
+                }
+
+            if error := self._validar_nombre_apellidos(datos_actualizacion.get("nombre", ""),
+                                                       datos_actualizacion.get("apellidos", "")):
+                return {"estatus": "ERROR", "mensaje": error, "status_code": 400}
+
+            if error := self._validar_password(datos_actualizacion.get("password", "Hola123!")):
+                return {"estatus": "ERROR", "mensaje": error, "status_code": 400}
+
+            if "email" in datos_actualizacion:
+                if self.usuarios.find_one(
+                        {"email": datos_actualizacion["email"], "_id": {"$ne": ObjectId(id_usuario)}}):
+                    return {"estatus": "ERROR", "mensaje": "El correo electrónico ya está registrado",
+                            "status_code": 400}
+
+            coord_data = datos_actualizacion.get("coordinador", {})
+            if not coord_data:
+                return {"estatus": "ERROR", "mensaje": "Datos del coordinador requeridos", "status_code": 400}
+
+            if not re.match(r'^[A-Za-z]{2}\d{3,8}$', coord_data.get("noEmpleado", "")):
+                return {"estatus": "ERROR",
+                        "mensaje": "El número de empleado debe comenzar con 2 letras seguidas de 3 a 8 dígitos",
+                        "status_code": 400}
+
+            if not (3 <= len(coord_data.get("departamento", "")) <= 50):
+                return {"estatus": "ERROR", "mensaje": "El departamento debe tener entre 3 y 50 caracteres",
+                        "status_code": 400}
+
+            if not self._validar_carrera(coord_data.get("carrera")):
+                return {"estatus": "ERROR", "mensaje": "La carrera especificada no existe", "status_code": 400}
+
+            if self.usuarios.find_one(
+                    {"coordinador.noEmpleado": coord_data.get("noEmpleado"), "_id": {"$ne": ObjectId(id_usuario)}}):
+                return {"estatus": "ERROR", "mensaje": "El número de empleado ya está registrado", "status_code": 400}
+
+            datos_actualizacion["fechaRegistro"] = datetime.now()
+            if "password" in datos_actualizacion:
+                datos_actualizacion["password"] = bcrypt.hashpw(datos_actualizacion["password"].encode("utf-8"),
+                                                                bcrypt.gensalt()).decode("utf-8")
+
+            self.usuarios.update_one({"_id": ObjectId(id_usuario)}, {"$set": datos_actualizacion})
+
+            return {
+                "estatus": "OK",
+                "mensaje": "Coordinador actualizado correctamente",
+                "status_code": 200
+            }
+
+        except Exception as ex:
+            print(f"Error al actualizar coordinador {id_usuario}: {ex}")
+            return {
+                "estatus": "ERROR",
+                "mensaje": "Error interno al actualizar el coordinador",
                 "status_code": 500
             }
 
     # Componente para la eliminación de usuarios
 
-    def eliminar_usuario(self, id_usuario: str, no_empleado_coordinador: str) -> Dict[str, Any]:
+    def eliminar_usuario_logico(self, id_usuario: str) -> Dict[str, Any]:
         try:
-            # 1. Validar ID de usuario
             if not ObjectId.is_valid(id_usuario):
                 return {
                     "estatus": "ERROR",
@@ -367,20 +509,6 @@ class UsuarioDAO:
                     "status_code": 400
                 }
 
-            # 2. Validar coordinador
-            coordinador = self.usuarios.find_one({
-                "coordinador.noEmpleado": no_empleado_coordinador,
-                "tipo": "coordinador"
-            })
-
-            if not coordinador:
-                return {
-                    "estatus": "ERROR",
-                    "mensaje": "Acceso denegado: Solo coordinadores pueden eliminar usuarios",
-                    "status_code": 403
-                }
-
-            # 3. Obtener usuario completo antes de eliminar
             usuario = self.usuarios.find_one({"_id": ObjectId(id_usuario)})
             if not usuario:
                 return {
@@ -389,52 +517,62 @@ class UsuarioDAO:
                     "status_code": 404
                 }
 
-            # 4. Verificar dependencias
-            if self.tiene_dependencias(id_usuario):
+            # Ya estaba inactivo
+            if usuario.get("status") == "inactivo":
                 return {
                     "estatus": "ERROR",
-                    "mensaje": "El usuario tiene registros asociados y no puede ser eliminado",
-                    "status_code": 409,
-                    "usuario": self.formatear_usuario(usuario)  # Incluir datos aunque haya error
+                    "mensaje": "El usuario ya se encuentra inactivo",
+                    "status_code": 409
                 }
 
-            # 5. Eliminar y preparar respuesta
-            self.usuarios.delete_one({"_id": ObjectId(id_usuario)})
+            # Cambio de status del usuario raíz
+            self.usuarios.update_one(
+                {"_id": ObjectId(id_usuario)},
+                {"$set": {"status": "inactivo"}}
+            )
+
+            # Si el usuario eliminado es un tutor, actualizar el status en todos los alumnos relacionados
+            if usuario["tipo"] == "tutor":
+                tutor_id = ObjectId(id_usuario)
+                resultado = self.usuarios.update_many(
+                    {
+                        "tipo": "alumno",
+                        "tutorId": tutor_id,
+                        "alumno.tutor.nombre": usuario["nombre"],  # Esto ayuda a confirmar coincidencia exacta
+                        "alumno.tutor.noDocente": usuario["tutor"]["noDocente"]
+                    },
+                    {
+                        "$set": {
+                            "alumno.tutor.status": "inactivo"
+                        }
+                    }
+                )
+                print(f"[+] Se actualizaron {resultado.modified_count} alumnos con tutor embebido inactivado.")
 
             return {
                 "estatus": "OK",
-                "mensaje": "Usuario eliminado exitosamente",
+                "mensaje": "El usuario fue desactivado exitosamente",
                 "status_code": 200,
-                "usuario_eliminado": self.formatear_usuario(usuario),
-                "no_empleado_coordinador": no_empleado_coordinador
+                "usuario_eliminado": self.formatear_usuario(usuario)
             }
 
         except Exception as ex:
-            print(f"Error al eliminar usuario: {ex}")
+            print(f"Error en eliminación lógica: {ex}")
             return {
                 "estatus": "ERROR",
                 "mensaje": "Error interno del servidor",
                 "status_code": 500
             }
 
-    def tiene_dependencias(self, id_usuario: str) -> bool:
-        """Verifica si el usuario tiene registros asociados"""
-        return self.db.asistencias.count_documents({
-            "$or": [
-                {"id_alumno": ObjectId(id_usuario)},
-                {"id_tutor": ObjectId(id_usuario)}
-            ]
-        }) > 0
-
     def formatear_usuario(self, usuario: Dict) -> Dict:
-        """Aquí se formatea el documento de usuario para la respuesta"""
         usuario_formateado = {
             "id": str(usuario["_id"]),
             "email": usuario["email"],
             "nombre": usuario["nombre"],
             "apellidos": usuario["apellidos"],
             "tipo": usuario["tipo"],
-            "fechaRegistro": usuario["fechaRegistro"]
+            "fechaRegistro": usuario["fechaRegistro"],
+            "status": usuario.get("status", "activo")
         }
 
         if usuario["tipo"] == "alumno":

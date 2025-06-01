@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
-from models.actividadesModel import ActividadInsert, Salida, ActividadesSalida, ActividadSelectID, ActividadesSalidaID
+from models.actividadesModel import ActividadInsert, Salida, ActividadesSalida, ActividadSelectID, ActividadesSalidaID, TutorAsignacion
 from dao.actividadesDAO import ActividadDAO
+
 router = APIRouter(
     prefix="/actividades",
     tags=["Actividades"]
@@ -25,6 +26,12 @@ async def consultarActividadID(idActividad: str, request: Request) -> Actividade
 async def actualizarActividad(idActividad: str, actividad: ActividadInsert, request: Request) -> ActividadesSalidaID:
     actividadDAO = ActividadDAO(request.app.db)
     return actividadDAO.actualizar(idActividad, actividad)
+
+@router.patch("/{idActividad}/asignar-tutor", response_model=ActividadesSalidaID, summary="Asignar tutor a una actividad")
+async def asignar_tutor_actividad(idActividad: str, tutor_asignacion: TutorAsignacion, request: Request) -> ActividadesSalidaID:
+    actividadDAO = ActividadDAO(request.app.db)
+    return actividadDAO.asignar_tutor(idActividad, tutor_asignacion)
+
 
 @router.delete("/{idActividad}", response_model=Salida, summary="Cancelar una actividad")
 async def cancelarActividad(idActividad: str, request: Request) -> Salida:

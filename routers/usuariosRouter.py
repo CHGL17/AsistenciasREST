@@ -8,7 +8,7 @@ from models.usuariosModel import (
     # ActualizarCoordinadorRequest, ActualizarAlumnoRequest
 )
 from dao.dependencies import get_usuario_dao
-from dao.auth import create_access_token, require_coordinador, require_roles, require_rol
+from dao.auth import create_access_token, require_coordinador, require_roles, require_rol, validar_acceso_actualizacion
 from dao.usuariosDAO import UsuarioDAO
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
@@ -165,13 +165,21 @@ def consulta_general_usuarios(
 
 
 # === ACTUALIZAR ALUMNO ===
+
 @router.put("/alumno/{id_usuario}", response_model=Salida)
 def actualizar_alumno(
-        id_usuario: str,
-        datos: UsuarioAlumnoInsert,  # Se usa el mismo modelo de registro
-        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-        current_user: dict = Depends(get_current_user)
+    id_usuario: str,
+    datos: UsuarioAlumnoInsert,
+    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+    current_user: dict = Depends(get_current_user)
 ):
+    resultado_previo = usuario_dao.consultarUsuarioPorID(id_usuario)
+    if resultado_previo.estatus == "ERROR":
+        raise HTTPException(status_code=404, detail="Alumno no encontrado")
+
+    tipo_objetivo = resultado_previo.usuario.tipo
+    validar_acceso_actualizacion(current_user, tipo_objetivo, id_usuario)
+
     datos_dict = datos.model_dump(exclude_unset=True)
     resultado = usuario_dao.actualizar_alumno(id_usuario, datos_dict, current_user)
 
@@ -179,15 +187,21 @@ def actualizar_alumno(
         raise HTTPException(status_code=resultado["status_code"], detail=resultado["mensaje"])
     return Salida(estatus="OK", mensaje="Alumno actualizado correctamente.")
 
-
 # === ACTUALIZAR TUTOR ===
 @router.put("/tutor/{id_usuario}", response_model=Salida)
 def actualizar_tutor(
-        id_usuario: str,
-        datos: UsuarioTutorInsert,
-        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-        current_user: dict = Depends(lambda: require_self_or_coordinador(id_usuario))
+    id_usuario: str,
+    datos: UsuarioTutorInsert,
+    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+    current_user: dict = Depends(get_current_user)
 ):
+    resultado_previo = usuario_dao.consultarUsuarioPorID(id_usuario)
+    if resultado_previo.estatus == "ERROR":
+        raise HTTPException(status_code=404, detail="Tutor no encontrado")
+
+    tipo_objetivo = resultado_previo.usuario.tipo
+    validar_acceso_actualizacion(current_user, tipo_objetivo, id_usuario)
+
     datos_dict = datos.model_dump(exclude_unset=True)
     resultado = usuario_dao.actualizar_tutor(id_usuario, datos_dict, current_user)
 
@@ -195,15 +209,21 @@ def actualizar_tutor(
         raise HTTPException(status_code=resultado["status_code"], detail=resultado["mensaje"])
     return Salida(estatus="OK", mensaje="Tutor actualizado correctamente.")
 
-
 # === ACTUALIZAR COORDINADOR ===
 @router.put("/coordinador/{id_usuario}", response_model=Salida)
 def actualizar_coordinador(
-        id_usuario: str,
-        datos: UsuarioCoordInsert,
-        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-        current_user: dict = Depends(get_current_user)
+    id_usuario: str,
+    datos: UsuarioCoordInsert,
+    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+    current_user: dict = Depends(get_current_user)
 ):
+    resultado_previo = usuario_dao.consultarUsuarioPorID(id_usuario)
+    if resultado_previo.estatus == "ERROR":
+        raise HTTPException(status_code=404, detail="Coordinador no encontrado")
+
+    tipo_objetivo = resultado_previo.usuario.tipo
+    validar_acceso_actualizacion(current_user, tipo_objetivo, id_usuario)
+
     datos_dict = datos.model_dump(exclude_unset=True)
     resultado = usuario_dao.actualizar_coordinador(id_usuario, datos_dict, current_user)
 

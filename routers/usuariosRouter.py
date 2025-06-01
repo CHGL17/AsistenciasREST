@@ -7,7 +7,7 @@ from models.usuariosModel import (
     # , ActualizarTutorRequest,
     # ActualizarCoordinadorRequest, ActualizarAlumnoRequest
 )
-from dao.auth import create_access_token, require_coordinador, require_roles, require_rol
+from dao.auth import create_access_token, require_coordinador, require_roles, require_rol, require_same_user
 from dao.usuariosDAO import UsuarioDAO
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
@@ -123,16 +123,16 @@ def registro_coordinador(
 
 
 # Consultar usuario por ID
-
 @router.get("/{id_usuario}", response_model=UsuarioSalidaID, summary="Consultar un usuario por su ID",
             responses={
+                403: {"description": "Acceso denegado"},
                 404: {"model": UsuarioSalidaID, "description": "Usuario no encontrado"},
                 500: {"model": UsuarioSalidaID, "description": "Error interno del servidor"}
             })
 def consultar_usuario_por_id(
-        id_usuario: str,
-        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
-        current_user: dict = Depends(lambda: require_self_or_coordinador(id_usuario))
+    id_usuario: str,
+    usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+    current_user: dict = Depends(require_same_user)  # 🔒 validación de identidad por ID
 ):
     resultado = usuario_dao.consultarUsuarioPorID(id_usuario)
     if resultado.estatus == "ERROR":
@@ -143,10 +143,17 @@ def consultar_usuario_por_id(
     return resultado
 
 
+
 # Consulta general de usuarios
 @router.get("/general/", response_model=UsuarioSalidaLista, summary="Consulta general de usuarios",
-            response_description="Lista completa de usuarios registrados")
-def consulta_general_usuarios(usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)]):
+            response_description="Lista completa de usuarios registrados",
+            responses={
+                403: {"description": "Solo accesible para coordinadores"}
+            })
+def consulta_general_usuarios(
+        usuario_dao: Annotated[UsuarioDAO, Depends(get_usuario_dao)],
+        current_user: dict = Depends(require_rol("coordinador"))  # 🔐 solo coordinadores
+):
     return usuario_dao.consultaGeneralUsuarios()
 
 

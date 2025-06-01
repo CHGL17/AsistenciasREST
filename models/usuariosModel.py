@@ -12,6 +12,7 @@ class TutorInlineModel(BaseModel):
     horasTutoria: int
     carrera: int
     nombreCarrera: str
+    status: Literal["activo", "inactivo"]
 
 
 class AlumnoModel(BaseModel):
@@ -45,6 +46,7 @@ class UsuarioAlumnoInsert(BaseModel):
     password: str
     alumno: AlumnoModel
     tutorId: Optional[str] = Field(default=None, description="ID del tutor asignado")
+    status: Literal["activo", "inactivo"] = "activo"
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
 
@@ -56,6 +58,7 @@ class UsuarioTutorInsert(BaseModel):
     tipo: Literal["tutor"]
     password: str
     tutor: TutorModel
+    status: Literal["activo", "inactivo"] = "activo"
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
 
@@ -67,6 +70,7 @@ class UsuarioCoordInsert(BaseModel):
     tipo: Literal["coordinador"]
     password: str
     coordinador: CoordinadorModel
+    status: Literal["activo", "inactivo"] = "activo"
     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
 
@@ -84,21 +88,19 @@ class UsuarioBaseResponse(BaseModel):
     apellidos: str
     tipo: str
     fechaRegistro: datetime
+    status: str  # activo o inactivo
 
 
 class AlumnoResponse(UsuarioBaseResponse):
     alumno: AlumnoModel
 
 
-
 class TutorResponse(UsuarioBaseResponse):
     tutor: TutorModel
 
 
-
 class CoordinadorResponse(UsuarioBaseResponse):
     coordinador: CoordinadorModel
-
 
 
 class UsuarioSalidaID(Salida):
@@ -112,76 +114,55 @@ class UsuarioSalidaLista(Salida):
 
 
 # Modelo de entrada para la Modificación del usuario
-class ActualizarAlumnoRequest(BaseModel):
-    nombre: str | None = Field(None, min_length=2, max_length=50, example="Juan")
-    apellidos: str | None = Field(None, min_length=2, max_length=50, example="Pérez")
-    email: EmailStr | None = Field(None, example="alumno@example.com")
-    password: str | None = Field(None, min_length=8, example="NuevaContraseña123")
-    alumno: AlumnoModel | None = Field(
-        None,
-        example={
-            "noControl": "20230001",
-            "semestre": 5,
-            "carrera": 1
-        }
-    )
+# class ActualizarAlumnoRequest(BaseModel):
+#     email: EmailStr = Field(..., example="alumno@example.com")
+#     nombre: str = Field(..., example="Luis")
+#     apellidos: str = Field(..., example="García")
+#     tipo: Literal["alumno"]
+#     password: str = Field(..., min_length=8, example="Hola.123!")
+#     alumno: AlumnoModel
+#     tutorId: Optional[str] = Field(default=None, example="663b21ddfa41c12fcf17415e")
+#     status: Literal["activo", "inactivo"] = Field(..., example="activo")
+#     tutorId: Optional[str] = Field(default=None, example="663b21ddfa41c12fcf17415e")
+#
+#
+#
+# class ActualizarTutorRequest(BaseModel):
+#     email: EmailStr = Field(..., example="tutor@example.com")
+#     nombre: str = Field(..., example="María")
+#     apellidos: str = Field(..., example="Gómez")
+#     tipo: Literal["tutor"]
+#     password: str = Field(..., min_length=8, example="Hola.123!")
+#     tutor: TutorModel
+#     status: Literal["activo", "inactivo"] = Field(..., example="activo")
+#     fechaRegistro: datetime = Field(default_factory=datetime.now)
+#
+#
+# class ActualizarCoordinadorRequest(BaseModel):
+#     email: EmailStr = Field(..., example="coordinador@example.com")
+#     nombre: str = Field(..., example="Carlos")
+#     apellidos: str = Field(..., example="Lopez")
+#     tipo: Literal["coordinador"]
+#     password: str = Field(..., min_length=8, example="Hola.123!")
+#     coordinador: CoordinadorModel
+#     status: Literal["activo", "inactivo"] = Field(..., example="activo")
+#     fechaRegistro: datetime = Field(default_factory=datetime.now)
 
 
-class ActualizarTutorRequest(BaseModel):
-    nombre: str | None = Field(None, min_length=2, max_length=50, example="María")
-    apellidos: str | None = Field(None, min_length=2, max_length=50, example="Gómez")
-    email: EmailStr | None = Field(None, example="tutor@example.com")
-    password: str | None = Field(None, min_length=8, example="NuevaContraseña123")
-    tutor: TutorModel | None = Field(
-        None,
-        example={
-            "noDocente": "T12345",
-            "horasTutoria": 10,
-            "carrera": 1,
-            "nombreCarrera": "Ingeniería en Sistemas"
-        }
-    )
+# class UsuarioActualizadoResponse(BaseModel):
+#     id: str
+#     email: EmailStr
+#     nombre: str
+#     apellidos: str
+#     tipo: Literal["alumno", "tutor", "coordinador"]
+#     fechaRegistro: datetime
+#     alumno: Optional[Dict] = None
+#     tutor: Optional[Dict] = None
+#     coordinador: Optional[Dict] = None
 
 
-class ActualizarCoordinadorRequest(BaseModel):
-    nombre: str | None = Field(None, min_length=2, max_length=50, example="Carlos")
-    apellidos: str | None = Field(None, min_length=2, max_length=50, example="López")
-    email: EmailStr | None = Field(None, example="coordinador@example.com")
-    password: str | None = Field(None, min_length=8, example="NuevaContraseña123")
-    coordinador: CoordinadorModel | None = Field(
-        None,
-        example={
-            "noEmpleado": "CO12345",
-            "departamento": "Tutorías",
-            "carrera": 1,
-            "nombreCarrera": "Ingeniería en Sistemas"
-        }
-    )
-
-class UsuarioActualizadoResponse(BaseModel):
-    id: str
-    email: EmailStr
-    nombre: str
-    apellidos: str
-    tipo: Literal["alumno", "tutor", "coordinador"]
-    fechaRegistro: datetime
-    alumno: Optional[Dict] = None
-    tutor: Optional[Dict] = None
-    coordinador: Optional[Dict] = None
-
-# Modelo de entrada para la eliminación de usuarios
-class EliminarUsuarioRequest(BaseModel):
-    no_empleado_coordinador: str = Field(
-        ...,
-        description="Número de empleado del coordinador que autoriza la eliminación",
-        example="CO123456",
-        min_length=3,
-        max_length=20
-    )
-
-
+# Modelo de salida para la eliminación de usuarios
 class UsuarioEliminadoResponse(BaseModel):
     mensaje: str
     detalles_eliminacion: dict
-    coordinador_autorizador: str
     fecha_eliminacion: datetime = Field(default_factory=datetime.now)

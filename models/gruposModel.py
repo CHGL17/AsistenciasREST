@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 from .ciclosModel import CicloSelect
 from .carrerasModel import CarreraSelect
@@ -22,8 +22,6 @@ class AlumnoView(BaseModel):
     semestre: int
     status: str
 
-# from datetime import datetime
-        
 class GrupoInsert(BaseModel):
     nombre: str
     semestre: int
@@ -31,6 +29,7 @@ class GrupoInsert(BaseModel):
     carrera: int  # ObjectId as string reference to carreras collection
     tutor: str  # ObjectId as string reference to usuarios collection
     alumnos: List[str]  # List of ObjectId as string references to usuarios collection
+    estatus: Literal["activo", "inactivo"] = "activo"  # Campo de estatus añadido
 
 class GrupoUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -39,6 +38,7 @@ class GrupoUpdate(BaseModel):
     carrera: Optional[int] = None  # ObjectId as string reference to carreras collection
     tutor: Optional[str] = None  # ObjectId as string reference to usuarios collection
     alumnos: Optional[List[str]] = None  # List of ObjectId as string references to usuarios collection
+    estatus: Optional[Literal["activo", "inactivo"]] = None  # Campo de estatus añadido
 
 class Salida(BaseModel):
     estatus: str
@@ -52,6 +52,7 @@ class GrupoSelect(BaseModel):
     carrera: CarreraSelect
     tutor: TutorView
     alumnos: List[AlumnoView]
+    estatus: Literal["activo", "inactivo"]  # Campo de estatus añadido
 
 class GruposSalida(Salida):
     grupos: List[GrupoSelect]

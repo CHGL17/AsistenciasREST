@@ -11,7 +11,7 @@ import os
 # Configuración secreta
 SECRET_KEY = "asistencias_secret_jwt"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 3600
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/usuarios/login")
 

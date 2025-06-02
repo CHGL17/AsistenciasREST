@@ -12,10 +12,10 @@ router = APIRouter(
 async def crearActividad(
     actividad: ActividadInsert, 
     request: Request,
-    current_user: dict = Depends(require_rol("Coordinador"))
+    current_user: dict = Depends(require_rol("coordinador"))
 ) -> Salida:
     """
-    Crear una nueva actividad - Solo Coordinadores
+    Crear una nueva actividad - Solo coordinadores
     """
     actividadDAO = ActividadDAO(request.app.db)
     return actividadDAO.agregar(actividad)
@@ -23,7 +23,7 @@ async def crearActividad(
 @router.get("/", response_model=ActividadesSalida, summary="Consultar todas las actividades")
 async def consultaActividades(
     request: Request,
-    current_user: dict = Depends(require_roles(["Coordinador", "tutor", "alumno"]))
+    current_user: dict = Depends(require_roles(["coordinador", "tutor", "alumno"]))
 ) -> ActividadesSalida:
     """
     Consultar todas las actividades - Coordinadores, Tutores y Alumnos
@@ -35,7 +35,7 @@ async def consultaActividades(
 async def consultarActividadID(
     idActividad: str, 
     request: Request,
-    current_user: dict = Depends(require_roles(["Coordinador", "tutor", "alumno"]))
+    current_user: dict = Depends(require_roles(["coordinador", "tutor", "alumno"]))
 ) -> ActividadesSalidaID:
     """
     Consultar una actividad específica - Coordinadores, Tutores y Alumnos
@@ -48,7 +48,7 @@ async def actualizarActividad(
     idActividad: str, 
     actividad: ActividadInsert, 
     request: Request,
-    current_user: dict = Depends(require_rol("Coordinador"))
+    current_user: dict = Depends(require_rol("coordinador"))
 ) -> ActividadesSalidaID:
     """
     Actualizar una actividad - Solo Coordinadores
@@ -61,7 +61,7 @@ async def asignar_tutor_actividad(
     idActividad: str, 
     tutor_asignacion: TutorAsignacion, 
     request: Request,
-    current_user: dict = Depends(require_rol("Coordinador"))
+    current_user: dict = Depends(require_rol("coordinador"))
 ) -> ActividadesSalidaID:
     """
     Asignar tutor a una actividad - Solo Coordinadores
@@ -73,7 +73,7 @@ async def asignar_tutor_actividad(
 async def cancelarActividad(
     idActividad: str, 
     request: Request,
-    current_user: dict = Depends(require_rol("Coordinador"))
+    current_user: dict = Depends(require_rol("coordinador"))
 ) -> Salida:
     """
     Cancelar una actividad - Solo Coordinadores

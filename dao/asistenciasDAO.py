@@ -416,3 +416,219 @@ class AsistenciaDAO:
             salida.mensaje = "Error interno al eliminar el alumno de la asistencia"
             
         return salida
+    
+    def consultarAsistenciaPorID(self, asistencia_id: str) -> AsistenciaSalida:
+        """Consultar una asistencia específica por ID"""
+        salida = AsistenciaSalida(estatus="", mensaje="", asistencia=None)
+    
+        try:
+            # Validar que la asistencia existe
+            if not self.verificar_asistencia_existente_por_id(asistencia_id):
+                salida.estatus = "ERROR"
+                salida.mensaje = f"Asistencia con ID {asistencia_id} no encontrada"
+                return salida
+
+            # Obtener la asistencia desde la vista
+            asistencia = self.db.viewAsistenciasGeneral.find_one({"_id": ObjectId(asistencia_id)})
+            
+            if asistencia:
+                asistencia_select = AsistenciaSelect(
+                    id=str(asistencia["_id"]),
+                    actividad=asistencia["actividad"],
+                    fechaRegistro=asistencia["fechaRegistro"],
+                    fechaInicio=asistencia["fechaInicio"],
+                    fechaFin=asistencia["fechaFin"],
+                    horaInicio=asistencia["horaInicio"],
+                    horaFin=asistencia["horaFin"],
+                    estatus=asistencia["estatus"],
+                    ubicacion=asistencia["ubicacion"],
+                    grupo=asistencia["grupo"],
+                    listaAsistencia=asistencia["listaAsistencia"]
+                )
+                
+                salida.estatus = "OK"
+                salida.mensaje = "Asistencia encontrada exitosamente"
+                salida.asistencia = asistencia_select
+            else:
+                salida.estatus = "ERROR"
+                salida.mensaje = "Error al obtener la asistencia"
+                
+        except Exception as ex:
+            print(f"Error al consultar asistencia {asistencia_id}: {ex}")
+            salida.estatus = "ERROR"
+            salida.mensaje = "Error interno al consultar la asistencia"
+            
+        return salida
+
+    def actualizar(self, asistencia_id: str, asistencia_update: AsistenciaInsert) -> AsistenciaSalida:
+        """Actualizar una asistencia existente"""
+        salida = AsistenciaSalida(estatus="", mensaje="", asistencia=None)
+        
+        try:
+            # Validar que la asistencia existe
+            if not self.verificar_asistencia_existente_por_id(asistencia_id):
+                salida.estatus = "ERROR"
+                salida.mensaje = f"Asistencia con ID {asistencia_id} no encontrada"
+                return salida
+
+            # Validar que la actividad existe
+            if not self.verificar_actividad_existente(asistencia_update.actividad):
+                salida.estatus = "ERROR"
+                salida.mensaje = "La actividad especificada no existe"
+                return salida
+
+            # Validar que la ubicación existe
+            if not self.verificar_ubicacion_existente(asistencia_update.ubicacion):
+                salida.estatus = "ERROR"
+                salida.mensaje = "La ubicación especificada no existe"
+                return salida
+
+            # Validar que el grupo existe
+            if not self.verificar_grupo_existente(asistencia_update.grupo):
+                salida.estatus = "ERROR"
+                salida.mensaje = "El grupo especificado no existe"
+                return salida
+
+            # Validar que los alumnos pertenecen al grupo
+            if not self.verificar_alumnos_en_grupo(asistencia_update.grupo, asistencia_update.listaAsistencia):
+                salida.estatus = "ERROR"
+                salida.mensaje = "Uno o más números de control no pertenecen al grupo especificado"
+                return salida
+
+            # Validar que la fecha de fin sea posterior a la de inicio
+            if asistencia_update.fechaFin <= asistencia_update.fechaInicio:
+                salida.estatus = "ERROR"
+                salida.mensaje = "La fecha de fin debe ser posterior a la fecha de inicio"
+                return salida
+
+            # Validar que la hora de fin sea posterior a la de inicio
+            if asistencia_update.horaFin <= asistencia_update.horaInicio:
+                salida.estatus = "ERROR"
+                salida.mensaje = "La hora de fin debe ser posterior a la hora de inicio"
+                return salida
+
+            # Verificar duplicados (excluyendo la asistencia actual)
+            asistencia_actual = self.db.asistencias.find_one({"_id": ObjectId(asistencia_id)})
+            if (str(asistencia_actual.get("actividad")) != asistencia_update.actividad or 
+                str(asistencia_actual.get("grupo")) != asistencia_update.grupo or 
+                asistencia_actual.get("fechaInicio").date() != asistencia_update.fechaInicio.date()):
+                
+                if self.verificar_asistencia_existente(asistencia_update.actividad, asistencia_update.grupo, asistencia_update.fechaInicio):
+                    salida.estatus = "ERROR"
+                    salida.mensaje = "Ya existe una asistencia registrada para esta actividad, grupo y fecha"
+                    return salida
+
+            # Preparar datos para actualización
+            update_data = {
+                "actividad": ObjectId(asistencia_update.actividad),
+                "fechaInicio": asistencia_update.fechaInicio,
+                "fechaFin": asistencia_update.fechaFin,
+                "horaInicio": asistencia_update.horaInicio,
+                "horaFin": asistencia_update.horaFin,
+                "estatus": asistencia_update.estatus,
+                "ubicacion": ObjectId(asistencia_update.ubicacion),
+                "grupo": ObjectId(asistencia_update.grupo),
+                "listaAsistencia": [
+                    {
+                        "_id": ObjectId(alumno),
+                        "fechaHoraRegistro": datetime.now()
+                    } for alumno in asistencia_update.listaAsistencia
+                ]
+            }
+            
+            # Actualizar asistencia
+            resultado = self.db.asistencias.update_one(
+                {"_id": ObjectId(asistencia_id)},
+                {"$set": update_data}
+            )
+            
+            if resultado.modified_count > 0:
+                # Obtener la asistencia actualizada desde la vista
+                asistencia_actualizada = self.db.viewAsistenciasGeneral.find_one({"_id": ObjectId(asistencia_id)})
+                
+                if asistencia_actualizada:
+                    asistencia_select = AsistenciaSelect(
+                        id=str(asistencia_actualizada["_id"]),
+                        actividad=asistencia_actualizada["actividad"],
+                        fechaRegistro=asistencia_actualizada["fechaRegistro"],
+                        fechaInicio=asistencia_actualizada["fechaInicio"],
+                        fechaFin=asistencia_actualizada["fechaFin"],
+                        horaInicio=asistencia_actualizada["horaInicio"],
+                        horaFin=asistencia_actualizada["horaFin"],
+                        estatus=asistencia_actualizada["estatus"],
+                        ubicacion=asistencia_actualizada["ubicacion"],
+                        grupo=asistencia_actualizada["grupo"],
+                        listaAsistencia=asistencia_actualizada["listaAsistencia"]
+                    )
+                    
+                    salida.estatus = "OK"
+                    salida.mensaje = "Asistencia actualizada exitosamente"
+                    salida.asistencia = asistencia_select
+                else:
+                    salida.estatus = "ERROR"
+                    salida.mensaje = "Error al obtener la asistencia actualizada"
+            else:
+                salida.estatus = "OK"
+                salida.mensaje = "No se realizaron cambios en la asistencia (posiblemente los datos ya eran los mismos)"
+                # Devolver la asistencia actual
+                asistencia_actual = self.db.viewAsistenciasGeneral.find_one({"_id": ObjectId(asistencia_id)})
+                if asistencia_actual:
+                    salida.asistencia = AsistenciaSelect(
+                        id=str(asistencia_actual["_id"]),
+                        actividad=asistencia_actual["actividad"],
+                        fechaRegistro=asistencia_actual["fechaRegistro"],
+                        fechaInicio=asistencia_actual["fechaInicio"],
+                        fechaFin=asistencia_actual["fechaFin"],
+                        horaInicio=asistencia_actual["horaInicio"],
+                        horaFin=asistencia_actual["horaFin"],
+                        estatus=asistencia_actual["estatus"],
+                        ubicacion=asistencia_actual["ubicacion"],
+                        grupo=asistencia_actual["grupo"],
+                        listaAsistencia=asistencia_actual["listaAsistencia"]
+                    )
+                
+        except Exception as ex:
+            print(f"Error al actualizar asistencia {asistencia_id}: {ex}")
+            salida.estatus = "ERROR"
+            salida.mensaje = "Error interno al actualizar la asistencia"
+            
+        return salida
+
+    def cancelar(self, asistencia_id: str) -> Salida:
+        """Cancelar/eliminar una asistencia (eliminación lógica)"""
+        salida = Salida(estatus="", mensaje="")
+        
+        try:
+            # Validar que la asistencia existe
+            if not self.verificar_asistencia_existente_por_id(asistencia_id):
+                salida.estatus = "ERROR"
+                salida.mensaje = f"Asistencia con ID {asistencia_id} no encontrada"
+                return salida
+
+            # Verificar el estado actual de la asistencia
+            asistencia_actual = self.db.asistencias.find_one({"_id": ObjectId(asistencia_id)})
+            
+            if asistencia_actual.get("estatus") == "Cancelada":
+                salida.estatus = "OK"
+                salida.mensaje = f"La asistencia con ID {asistencia_id} ya se encuentra cancelada"
+                return salida
+
+            # Cancelar la asistencia (cambio de estatus)
+            resultado = self.db.asistencias.update_one(
+                {"_id": ObjectId(asistencia_id)},
+                {"$set": {"estatus": "Cancelada"}}
+            )
+
+            if resultado.modified_count > 0:
+                salida.estatus = "OK"
+                salida.mensaje = f"Asistencia con ID {asistencia_id} cancelada exitosamente"
+            else:
+                salida.estatus = "ERROR"
+                salida.mensaje = "No se pudo cancelar la asistencia. Verifique el estado actual"
+                
+        except Exception as ex:
+            print(f"Error al cancelar asistencia {asistencia_id}: {ex}")
+            salida.estatus = "ERROR"
+            salida.mensaje = "Error interno al cancelar la asistencia"
+            
+        return salida

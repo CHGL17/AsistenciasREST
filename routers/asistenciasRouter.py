@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends
-from models.asistenciasModel import AsistenciaInsert, AsistenciaSalida, AsistenciasSalida
+from models.asistenciasModel import AsistenciaInsert, AsistenciaSalida, AsistenciasSalida, Salida
 from dao.asistenciasDAO import AsistenciaDAO
 from dao.auth import require_roles, require_rol
 
@@ -31,6 +31,31 @@ async def consultarAsistencias(
     asistenciaDAO = AsistenciaDAO(request.app.db)
     return asistenciaDAO.consultaGeneral()
 
+@router.get("/{idAsistencia}", response_model=AsistenciaSalida, summary="Consultar una asistencia por su ID")
+async def consultarAsistenciaPorID(
+    idAsistencia: str, 
+    request: Request,
+    current_user: dict = Depends(require_roles(["coordinador", "tutor", "alumno"]))
+) -> AsistenciaSalida:
+    """
+    Consultar una asistencia específica - Coordinadores, Tutores y Alumnos
+    """
+    asistenciaDAO = AsistenciaDAO(request.app.db)
+    return asistenciaDAO.consultarAsistenciaPorID(idAsistencia)
+
+@router.put("/{idAsistencia}", response_model=AsistenciaSalida, summary="Actualizar una asistencia")
+async def actualizarAsistencia(
+    idAsistencia: str, 
+    asistencia: AsistenciaInsert, 
+    request: Request,
+    current_user: dict = Depends(require_roles(["coordinador", "tutor"]))
+) -> AsistenciaSalida:
+    """
+    Actualizar una asistencia - Coordinadores y Tutores
+    """
+    asistenciaDAO = AsistenciaDAO(request.app.db)
+    return asistenciaDAO.actualizar(idAsistencia, asistencia)
+
 @router.patch("/{idAsistencia}/alumnos/{idAlumno}", response_model=AsistenciaSalida, summary="Agregar un alumno a la lista de asistencia")
 async def agregarAlumnoAAsistencia(
     idAsistencia: str, 
@@ -56,3 +81,15 @@ async def eliminarAlumnoDeAsistencia(
     """
     asistenciaDAO = AsistenciaDAO(request.app.db)
     return asistenciaDAO.eliminarAlumnoAsistencia(idAsistencia, idAlumno)
+
+@router.delete("/{idAsistencia}", response_model=Salida, summary="Cancelar una asistencia")
+async def cancelarAsistencia(
+    idAsistencia: str, 
+    request: Request,
+    current_user: dict = Depends(require_roles(["coordinador", "tutor"]))
+) -> Salida:
+    """
+    Cancelar una asistencia - Coordinadores y Tutores
+    """
+    asistenciaDAO = AsistenciaDAO(request.app.db)
+    return asistenciaDAO.cancelar(idAsistencia)

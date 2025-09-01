@@ -18,7 +18,7 @@ Resuelve la problemática de control de **asistencias y actividades extraescolar
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?style=for-the-badge&logo=mongodb)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
-![Build](https://img.shields.io/github/actions/workflow/status/tu_usuario/AsistenciasREST/ci.yml?branch=master&label=Build&logo=github&style=for-the-badge)
+![Build](https://img.shields.io/github/actions/workflow/status/Manuelillo-dev/AsistenciasREST/ci.yml?branch=master&label=Build&logo=github&style=for-the-badge)
 ![Coverage](https://img.shields.io/codecov/c/github/tu_usuario/AsistenciasREST?logo=codecov&style=for-the-badge)
 
 </div>

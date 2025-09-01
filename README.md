@@ -18,8 +18,6 @@ Resuelve la problemática de control de **asistencias y actividades extraescolar
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?style=for-the-badge&logo=mongodb)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
-![Build](https://img.shields.io/github/actions/workflow/status/Manuelillo-dev/AsistenciasREST/ci.yml?branch=master&label=Build&logo=github&style=for-the-badge)
-![Coverage](https://img.shields.io/codecov/c/github/tu_usuario/AsistenciasREST?logo=codecov&style=for-the-badge)
 
 </div>
 
@@ -46,27 +44,15 @@ El sistema está organizado en **routers independientes por dominio**:
 - `Grupos`  
 - `Ubicaciones`  
 - `Asistencias`
-  ```mermaid
-flowchart TD
-    subgraph API[AsistenciasREST API - FastAPI]
-        USR[Usuarios Router]
-        ACT[Actividades Router]
-        CIC[Ciclos Router]
-        CAR[Carreras Router]
-        GRP[Grupos Router]
-        UBI[Ubicaciones Router]
-        AST[Asistencias Router]
-    end
-    ```
 
-     API --> DB[(MongoDB Atlas)]
+  API --> DB[(MongoDB Atlas)]
 
 👉 Esto facilita **mantenimiento, escalabilidad y despliegues independientes**.  
 
 ---
 
 ## 🛠️ Stack Tecnológico
-<div align="center">
+<p align="center">
   | Componente | Tecnología | Propósito |
   |------------|------------|-----------|
   | **Framework** | FastAPI | API REST de alto rendimiento |
@@ -76,7 +62,7 @@ flowchart TD
   | **Validación** | Pydantic | Validación y serialización |
   | **Seguridad** | bcrypt + jose | Hash de contraseñas y JWT |
   | **Docs** | Swagger UI / ReDoc | Documentación automática |
-</div>
+</p>
 ---
 
 ## 🚀 Cómo Empezar
@@ -117,15 +103,15 @@ uvicorn main:app --reload
 ```
 Swagger → (http://127.0.0.1:8000/docs)
 
-<div align="center">
+<p align="center">
   | Nombre                       | Contacto                                                          | Rol                      |
   | ---------------------------- | ----------------------------------------------------------------- | ------------------------ |
   | **Carlos H. García Lira**    | [L21010280@zamora.tecnm.mx](mailto:L21010280@zamora.tecnm.mx)     | Backend / DB Admin       |
   | **Leonardo B. Garibay**      | [leobeedrok7@gmail.com](mailto:leobeedrok7@gmail.com)             | Backend / API Design     |
   | **Carlos E. López Quesada**  | [lopezmany111@gmail.com](mailto:lopezmany111@gmail.com)           | Backend / Auth Lead      |
   | **Manuel Ramírez Rodríguez** | [manuel.raamirez03@gmail.com](mailto:manuel.raamirez03@gmail.com) | Project Manager / DevOps |
-</div>
+</p>
 ---
 
-<div align="center"> <img src="https://media.giphy.com/media/xTiN0CNHgoRf1Ha7CM/giphy.gif" width="80%" alt="Glitch Separator"/> <h3>_"Optimizando la acreditación estudiantil, un endpoint a la vez."_ 🚀</h3> </div> ```
+<div align="center"> <img src="https://media.giphy.com/media/xTiN0CNHgoRf1Ha7CM/giphy.gif" width="80%" alt="Glitch Separator"/> <h3> "Optimizando la acreditación estudiantil, un endpoint a la vez." 🚀</h3> </div> ```
 

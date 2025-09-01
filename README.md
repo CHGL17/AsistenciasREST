@@ -1,10 +1,6 @@
 <h1 align="center"><b>📊 AsistenciasREST API</b></h1>
 <h3 align="center">API REST robusta para la gestión de actividades extraescolares en el ITESZ</h3>
 
-<div align="center">
-  <img src="https://media.giphy.com/media/l41YtZOb9EUABnuqA/giphy.gif" width="70%" alt="Glitch Banner"/>
-</div>
-
 ---
 
 ## 🚀 Descripción

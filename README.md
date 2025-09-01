@@ -52,7 +52,7 @@ El sistema está organizado en **routers independientes por dominio**:
 ---
 
 ## 🛠️ Stack Tecnológico
-<p align="center">
+
   | Componente | Tecnología | Propósito |
   |------------|------------|-----------|
   | **Framework** | FastAPI | API REST de alto rendimiento |
@@ -62,7 +62,7 @@ El sistema está organizado en **routers independientes por dominio**:
   | **Validación** | Pydantic | Validación y serialización |
   | **Seguridad** | bcrypt + jose | Hash de contraseñas y JWT |
   | **Docs** | Swagger UI / ReDoc | Documentación automática |
-</p>
+
 ---
 
 ## 🚀 Cómo Empezar
@@ -103,14 +103,14 @@ uvicorn main:app --reload
 ```
 Swagger → (http://127.0.0.1:8000/docs)
 
-<p align="center">
+
   | Nombre                       | Contacto                                                          | Rol                      |
   | ---------------------------- | ----------------------------------------------------------------- | ------------------------ |
   | **Carlos H. García Lira**    | [L21010280@zamora.tecnm.mx](mailto:L21010280@zamora.tecnm.mx)     | Backend / DB Admin       |
   | **Leonardo B. Garibay**      | [leobeedrok7@gmail.com](mailto:leobeedrok7@gmail.com)             | Backend / API Design     |
   | **Carlos E. López Quesada**  | [lopezmany111@gmail.com](mailto:lopezmany111@gmail.com)           | Backend / Auth Lead      |
   | **Manuel Ramírez Rodríguez** | [manuel.raamirez03@gmail.com](mailto:manuel.raamirez03@gmail.com) | Project Manager / DevOps |
-</p>
+
 ---
 
 <div align="center"> <img src="https://media.giphy.com/media/xTiN0CNHgoRf1Ha7CM/giphy.gif" width="80%" alt="Glitch Separator"/> <h3> "Optimizando la acreditación estudiantil, un endpoint a la vez." 🚀</h3> </div> ```

@@ -113,5 +113,5 @@ Swagger → (http://127.0.0.1:8000/docs)
 
 ---
 
-<div align="center"> <img src="https://media.giphy.com/media/xTiN0CNHgoRf1Ha7CM/giphy.gif" width="80%" alt="Glitch Separator"/> <h3> "Optimizando la acreditación estudiantil, un endpoint a la vez." 🚀</h3> </div> ```
+<div align="center"> <img src="https://media.giphy.com/media/xTiN0CNHgoRf1Ha7CM/giphy.gif" width="80%" alt="Glitch Separator"/> <h3> "Optimizando la acreditación estudiantil, un endpoint a la vez." 🚀</h3> </div>
 
